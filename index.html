@@ -60,7 +60,7 @@
         $('#messages').append($('<li>').text("Hurt by a " + msg));
     });
     socket.on('dead', function(msg){
-        $('#messages').append($('<li>').$('<b>').text("Killed by a " + msg));
+        $('#messages').append($('<li>').html("<strong>Killed by a " + msg + "</strong>"));
     });
 </script>
 </body>
