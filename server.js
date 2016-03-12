@@ -2,6 +2,7 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var request = require('request');
+var enemy = require('./enemyData');
 
 var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
 var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
@@ -34,8 +35,8 @@ function getThroneData() {
                 var currentLastHit = info['current']['lasthit'];
                 console.info("currentLastHit: " + currentLastHit);
                 if (info['current']['health'] < previousHealth) {
-                    console.info("hurt: " + currentLastHit);
-                    io.emit('hurt', currentLastHit)
+                    console.info("hurt: " + enemy[currentLastHit]);
+                    io.emit('hurt', enemy[currentLastHit])
                 }
                 previousHealth = info['current']['health']
             } else if (info['previous'] != null
@@ -43,9 +44,13 @@ function getThroneData() {
                 && info['previous']['health'] < previousHealth) {
                 previousHealth = 0;
                 var previousLastHit = info['previous']['lasthit'];
-                console.info("dead: " + previousLastHit);
-                io.emit('dead', previousLastHit)
+                console.info("dead: " + enemy[previousLastHit]);
+                io.emit('dead', enemy[previousLastHit])
             }
         }
     });
+}
+
+function getEnemy(int) {
+    return enemy[int]
 }
