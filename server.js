@@ -27,7 +27,7 @@ http.listen(server_port, server_ip_address, function() {
 setInterval(getThroneData, 1000);
 
 function getThroneData() {
-    var url = 'https://tb-api.xyz/stream/get?s=STEAM_0:0:10357287&key=CGKNPQTWY';
+    var url = 'https://tb-api.xyz/stream/get?s=76561197980980302&key=CGKNPQTWY';
     request.get(url, function(error, response, body) {
         if (!error && response.statusCode == 200) {
             var info = JSON.parse(body);
