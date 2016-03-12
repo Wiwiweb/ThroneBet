@@ -3,6 +3,9 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var request = require('request');
 
+var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
+
 var previousLastHit = 0;
 
 app.get('/', function(req, res) {
@@ -17,8 +20,8 @@ io.on('connection', function(socket) {
 });
 
 
-http.listen(1337, function() {
-    console.log('listening on http://localhost:1337');
+http.listen(server_port, server_ip_address, function() {
+    console.log("Listening on " + server_ip_address + ", server_port " + server_port)
 });
 
 setInterval(getThroneData, 1000);
