@@ -16,6 +16,10 @@ app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 
+app.get('/client.js', function (req, res) {
+    res.sendFile(__dirname + '/client.js');
+});
+
 io.on('connection', function (socket) {
     console.log("User " + socket.id + " connected");
     socket.on('join channel', function (channel) {
