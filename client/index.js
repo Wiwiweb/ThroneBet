@@ -13,13 +13,13 @@ $(document).ready(function() {
         socket.emit('check channel valid', $('#joinChannelInput').val());
         return false;
     });
+});
 
-    socket.on('error', function(msg) {
-        alert(msg);
-    });
 
-    socket.on('channel valid', function(channel) {
-        window.location.href = '/channel/' + channel;
-    });
+socket.on('error', function(msg) {
+    alert(msg);
+});
 
+socket.on('channel valid', function(channel) {
+    window.location.href = '/channel/' + channel;
 });

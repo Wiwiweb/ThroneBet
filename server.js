@@ -51,10 +51,13 @@ io.on('connection', function(socket) {
             io.to(socket.id).emit('error', "Channel does not exist!");
         }
     });
+    socket.on('disconnect', function() {
+        console.log("Disconnect event: " + socket.id)
+    });
 });
 
 function createChannel(socket, channel, key) {
-    getThroneData(channel, key, function(error, data) {
+    getThroneData(channel, key, function(error) {
         if (error) {
             console.log("Channel " + channel + " could not be created, " + error);
             if (error.message == 403) {
@@ -80,7 +83,7 @@ function addUserToChannel(socket, channel) {
     socket.join(channel);
     channelList[channel]['users'].push(user);
     socket.on('disconnect', function() {
-        disconnectUser(socket.id)
+        disconnectUser(socket.id);
     });
     io.to(socket.id).emit('connected');
 }
@@ -96,8 +99,12 @@ function disconnectUser(user) {
     channelList[channel]['users'].splice(channelList[channel]['users'].indexOf(user), 1);
 
     if (channelList[channel]['users'].length == 0) {
-        console.log("Channel " + channel + " is now empty, removing");
-        delete channelList[channel];
+        console.log("Channel " + channel + " is now empty, removing in a minute");
+        setTimeout(function() {
+            if (channelList[channel]['users'].length == 0) {
+                delete channelList[channel]
+            }
+        }, 60000);
     }
 }
 
@@ -111,13 +118,15 @@ setInterval(mainLoop, 1000);
 function mainLoop() {
     for (var channel in channelList) {
         if (channelList.hasOwnProperty(channel)) { // Necessary to avoid looping over prototype properties
-            var data = getThroneData(channel, channelList[channel]['key'], function(error, data) {
-                if (error) {
-                    console.error("Error fetching Throne data! code: " + error);
-                    return;
-                }
-                sendEventNotifications(data);
-            });
+            if (channelList[channel]['users'].length > 0) {
+                var data = getThroneData(channel, channelList[channel]['key'], function(error, data) {
+                    if (error) {
+                        console.error("Error fetching Throne data! code: " + error);
+                        return;
+                    }
+                    sendEventNotifications(data);
+                });
+            }
         }
     }
 }
