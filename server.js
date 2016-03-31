@@ -119,12 +119,12 @@ function mainLoop() {
     for (var channel in channelList) {
         if (channelList.hasOwnProperty(channel)) { // Necessary to avoid looping over prototype properties
             if (channelList[channel]['users'].length > 0) {
-                var data = getThroneData(channel, channelList[channel]['key'], function(error, data) {
+                var data = getThroneData(channel, channelList[channel]['key'], function(error, channel, data) {
                     if (error) {
                         console.error("Error fetching Throne data! code: " + error);
                         return;
                     }
-                    sendEventNotifications(data);
+                    sendEventNotifications(channel, data);
                 });
             }
         }
@@ -136,7 +136,7 @@ function getThroneData(channel, key, callback) {
     var url = 'https://tb-api.xyz/stream/get?s=' + channel + '&key=' + key;
     request.get(url, function(error, response, body) {
         if (!error && response.statusCode == 200) {
-            callback(null, JSON.parse(body));
+            callback(null, channel, JSON.parse(body));
         } else {
             console.log("Didn't work: " + response.statusCode);
             callback(new Error(response.statusCode));
@@ -144,7 +144,7 @@ function getThroneData(channel, key, callback) {
     });
 }
 
-function sendEventNotifications(data) {
+function sendEventNotifications(channel, data) {
     if (data['current'] != null) {
         var currentLastHit = data['current']['lasthit'];
         console.info("currentLastHit: " + currentLastHit);
