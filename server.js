@@ -137,7 +137,8 @@ function mainLoop() {
 
 function deleteChannel(channel) {
     console.log("Deleting channel " + channel);
-    delete channelList[channel]
+    delete channelList[channel];
+    delete channelDeletionTimeouts[channel];
 }
 
 function getThroneData(channel, key, callback) {
