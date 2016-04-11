@@ -11,6 +11,7 @@ var previousHealth = 0;
 
 var userList = {}; // Dictionary of user id -> channel the user is in
 var channelList = {}; // Dictionary of channel name -> channel object (contains key, list of users)
+var channelDeletionTimeouts = {}; // Dictionary of channel name -> timeout reference (to make sure there's only one)
 
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/client/index.html');
@@ -97,15 +98,6 @@ function disconnectUser(user) {
     }
     // Remove user from list
     channelList[channel]['users'].splice(channelList[channel]['users'].indexOf(user), 1);
-
-    if (channelList[channel]['users'].length == 0) {
-        console.log("Channel " + channel + " is now empty, removing in a minute");
-        setTimeout(function() {
-            if (channelList[channel]['users'].length == 0) {
-                delete channelList[channel]
-            }
-        }, 60000);
-    }
 }
 
 
@@ -118,7 +110,13 @@ setInterval(mainLoop, 1000);
 function mainLoop() {
     for (var channel in channelList) {
         if (channelList.hasOwnProperty(channel)) { // Necessary to avoid looping over prototype properties
+
             if (channelList[channel]['users'].length > 0) {
+                if (channelDeletionTimeouts[channel]) {
+                    console.log("Channel " + channel + " no longer empty, cancelling timeout");
+                    clearTimeout(channelDeletionTimeouts[channel]);
+                    delete channelDeletionTimeouts[channel];
+                }
                 var data = getThroneData(channel, channelList[channel]['key'], function(error, channel, data) {
                     if (error) {
                         console.error("Error fetching Throne data! code: " + error);
@@ -127,8 +125,19 @@ function mainLoop() {
                     sendEventNotifications(channel, data);
                 });
             }
+            else {
+                if (!channelDeletionTimeouts[channel]) {
+                    console.log("Channel " + channel + " is now empty, removing in a minute");
+                    channelDeletionTimeouts[channel] = setTimeout(deleteChannel.bind(this, channel), 60000);
+                }
+            }
         }
     }
+}
+
+function deleteChannel(channel) {
+    console.log("Deleting channel " + channel);
+    delete channelList[channel]
 }
 
 function getThroneData(channel, key, callback) {
