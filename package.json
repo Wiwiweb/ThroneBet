@@ -5,7 +5,8 @@
   "dependencies": {
     "express": "latest",
     "socket.io": "latest",
-    "request": "latest"
+    "request": "latest",
+    "express-session": "~1.13.0"
   },
   "scripts": {
     "start": "supervisor server.js"
