@@ -1,9 +1,13 @@
 var app = require('express')();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var request = require('request');
 var session = require('express-session');
+var http = require('http').Server(app);
+var openid = require('openid');
+var passport = require('passport');
+var OpenidStrategy = require('passport-openid').Strategy;
+var request = require('request');
+var io = require('socket.io')(http);
 var enemy = require('./enemyData');
+
 
 var config;
 
@@ -15,7 +19,7 @@ catch (err) {
     process.exit(1);
 }
 
-var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+var server_port = process.env.OPENSHIFT_NODEJS_PORT || 4000;
 var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 
 app.use(session({
@@ -23,6 +27,40 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }));
+
+var steamStrategy = new OpenidStrategy({
+        providerURL: 'http://steamcommunity.com/openid',
+        stateless: true,
+        returnURL: 'http://' + server_ip_address + ':' + server_port + '/auth/return',
+        realm: 'http://' + server_ip_address + ':' + server_port
+    },
+    // "validate" callback
+    function(identifier, done) {
+        process.nextTick(function() {
+            var user = {
+                identifier: identifier,
+                steamId: identifier.match(/\d+$/)[0]
+            };
+            return done(null, user);
+        });
+    });
+
+passport.use(steamStrategy);
+passport.serializeUser(function(user, done) {
+    done(null, user.identifier);
+});
+passport.deserializeUser(function(identifier, done) {
+    // For this demo, we'll just return an object literal since our user
+    // objects are this trivial.  In the real world, you'd probably fetch
+    // your user object from your database here.
+    done(null, {
+        identifier: identifier,
+        steamId: identifier.match(/\d+$/)[0]
+    });
+});
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 var previousHealth = 0;
@@ -49,6 +87,26 @@ app.get('/channel/channel.js', function(req, res) {
 
 app.get('/main.css', function(req, res) {
     res.sendFile(__dirname + '/client/main.css');
+});
+
+app.get('/images/:file', function(req, res) {
+    res.sendFile(__dirname + '/client/images/' + req.params.file);
+});
+
+app.get('/auth', passport.authenticate('openid'));
+
+app.get('/auth/return', passport.authenticate('openid'),
+    function(req, res) {
+        if (req.user) {
+            res.redirect('/?steamid=' + req.user.steamId);
+        } else {
+            res.redirect('/?failed');
+        }
+    });
+
+app.get('/auth/logout', function(req, res) {
+    req.logout();
+    res.redirect(request.get('Referer') || '/')
 });
 
 io.on('connection', function(socket) {
