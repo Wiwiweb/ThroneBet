@@ -1,3 +1,4 @@
+var ejs = require('ejs');
 var app = require('express')();
 var session = require('express-session');
 var http = require('http').Server(app);
@@ -69,8 +70,12 @@ var userList = {}; // Dictionary of user id -> channel the user is in
 var channelList = {}; // Dictionary of channel name -> channel object (contains key, list of users)
 var channelDeletionTimeouts = {}; // Dictionary of channel name -> timeout reference (to make sure there's only one)
 
+app.set('view engine', 'ejs');
+
 app.get('/', function(req, res) {
-    res.sendFile(__dirname + '/client/index.html');
+    res.render(__dirname + '/client/index.ejs', {
+        user: req.user
+    });
 });
 
 app.get('/channel/[a-z0-9]+', function(req, res) {
@@ -138,7 +143,7 @@ function createChannel(socket, channel, key) {
         if (error) {
             console.log("Channel " + channel + " could not be created, " + error);
             if (error.message == 403) {
-                io.to(socket.id).emit('error', "Wrong channel and/or key!");
+                io.to(socket.id).emit('error', "Wrong key!");
             } else {
                 io.to(socket.id).emit('error', "Unknown error!");
             }

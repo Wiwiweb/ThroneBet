@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ThroneBet</title>
+    <style src="main.css"></style>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="index.js"></script>
+</head>
+<body>
+<h1>Create channel:</h1>
+    <% if(user) { %>
+        Logged in as <%= JSON.stringify(user) %><br/>
+        <form id="createChannelForm">
+        <input type="hidden" id="createChannelInput" value="<%= user.steamId %>">
+        Key: <input type="text" id="createKeyInput"><br/>
+        <input type="submit" value="Go">
+        </form>
+    <% } else { %>
+        <a href="auth"><img src="images/sits_large_border.png"></a>
+    <% } %>
+<h1>Join channel:</h1>
+<form id="joinChannelForm">
+    Channel: <input type="text" id="joinChannelInput"><br/>
+    <input type="submit" value="Go">
+</form>
+</body>
+</html>

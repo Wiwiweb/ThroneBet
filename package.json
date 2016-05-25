@@ -9,7 +9,8 @@
     "express-session": "~1.13.0",
     "openid": "latest",
     "passport": "~0.3.2",
-    "passport-openid": "~0.4.0"
+    "passport-openid": "~0.4.0",
+    "ejs": "~2.4.2"
   },
   "scripts": {
     "start": "supervisor server.js"
