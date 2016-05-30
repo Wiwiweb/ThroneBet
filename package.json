@@ -1,7 +1,6 @@
 {
-  "name": "application-name",
+  "name": "throne-bet",
   "version": "0.0.1",
-  "description": "my first socket.io app",
   "dependencies": {
     "express": "latest",
     "socket.io": "latest",
