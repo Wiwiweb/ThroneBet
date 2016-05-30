@@ -1,10 +1,19 @@
+var dateFormat = require('dateformat');
 var ejs = require('ejs');
 var app = require('express')();
 var session = require('express-session');
 var http = require('http').Server(app);
+var winston = require('winston');
 
 var openid = require('./openid');
 var throneLogic = require('./throne_logic');
+
+winston.remove(winston.transports.Console);
+winston.add(winston.transports.Console, {
+    'timestamp': function() {
+        return dateFormat(new Date());
+    }, 'colorize': true
+});
 
 var config;
 
@@ -31,10 +40,10 @@ openid(app, server_ip_address, server_port);
 app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {
-    console.log('req:', req.user);
     res.render(__dirname + '/client/index.ejs', {
         user: req.user
     });
+    winston.debug("User is", req.user);
 });
 
 app.get('/channel/[a-z0-9]+', function(req, res) {
@@ -59,7 +68,7 @@ app.get('/images/:file', function(req, res) {
 
 
 http.listen(server_port, server_ip_address, function() {
-    console.log("Listening on http://" + server_ip_address + ":" + server_port)
+    winston.info("Listening on http://" + server_ip_address + ":" + server_port);
 });
 
 // Set socket connections and throne logic main loop

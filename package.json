@@ -2,14 +2,16 @@
   "name": "throne-bet",
   "version": "0.0.1",
   "dependencies": {
+    "dateformat": "latest",
+    "ejs": "latest",
     "express": "latest",
-    "socket.io": "latest",
-    "request": "latest",
-    "express-session": "~1.13.0",
+    "express-session": "latest",
     "openid": "latest",
-    "passport": "~0.3.2",
-    "passport-openid": "~0.4.0",
-    "ejs": "~2.4.2"
+    "passport": "latest",
+    "passport-openid": "latest",
+    "request": "latest",
+    "socket.io": "latest",
+    "winston": "latest"
   },
   "scripts": {
     "start": "supervisor server.js"

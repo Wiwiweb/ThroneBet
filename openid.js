@@ -1,6 +1,7 @@
 var openid = require('openid');
 var passport = require('passport');
 var OpenidStrategy = require('passport-openid').Strategy;
+var winston = require('winston');
 
 module.exports = function(app, address, port) {
     var steamStrategy = new OpenidStrategy({
@@ -11,7 +12,7 @@ module.exports = function(app, address, port) {
         },
         // "validate" callback
         function (identifier, done) {
-            console.log('user: ' + identifier);
+            winston.log('user: ' + identifier);
             var user = {
                 identifier: identifier,
                 steamId: identifier.match(/\d+$/)[0]

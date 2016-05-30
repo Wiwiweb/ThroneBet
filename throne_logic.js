@@ -1,5 +1,6 @@
 var socketio = require('socket.io');
 var request = require('request');
+var winston = require('winston');
 
 var enemy = require('./enemyData');
 
@@ -12,7 +13,7 @@ var channelDeletionTimeouts = {}; // Dictionary of channel name -> timeout refer
 module.exports = function(http) {
     var io = socketio(http);
     io.on('connection', function (socket) {
-        console.log("User " + socket.id + " connected");
+        winston.log("User " + socket.id + " connected");
         socket.on('create channel', function (channel, key) {
             createChannel(socket, channel, key);
         });
@@ -31,7 +32,7 @@ module.exports = function(http) {
             }
         });
         socket.on('disconnect', function () {
-            console.log("Disconnect event: " + socket.id)
+            winston.log("Disconnect event: " + socket.id)
         });
     });
 
@@ -45,13 +46,13 @@ function mainLoop() {
 
             if (channelList[channel]['users'].length > 0) {
                 if (channelDeletionTimeouts[channel]) {
-                    console.log("Channel " + channel + " no longer empty, cancelling timeout");
+                    winston.log("Channel " + channel + " no longer empty, cancelling timeout");
                     clearTimeout(channelDeletionTimeouts[channel]);
                     delete channelDeletionTimeouts[channel];
                 }
                 var data = getThroneData(channel, channelList[channel]['key'], function (error, channel, data) {
                     if (error) {
-                        console.error("Error fetching Throne data! code: " + error);
+                        winston.error("Error fetching Throne data! code: " + error);
                         return;
                     }
                     sendEventNotifications(channel, data);
@@ -59,7 +60,7 @@ function mainLoop() {
             }
             else {
                 if (!channelDeletionTimeouts[channel]) {
-                    console.log("Channel " + channel + " is now empty, removing in a minute");
+                    winston.log("Channel " + channel + " is now empty, removing in a minute");
                     channelDeletionTimeouts[channel] = setTimeout(deleteChannel.bind(this, channel), 60000);
                 }
             }
@@ -70,7 +71,7 @@ function mainLoop() {
 function createChannel(socket, channel, key) {
     getThroneData(channel, key, function (error) {
         if (error) {
-            console.log("Channel " + channel + " could not be created, " + error);
+            winston.log("Channel " + channel + " could not be created, " + error);
             if (error.message == 403) {
                 io.to(socket.id).emit('error', "Wrong key!");
             } else {
@@ -78,24 +79,24 @@ function createChannel(socket, channel, key) {
             }
             return;
         }
-        console.log("Creating channel " + channel);
+        winston.log("Creating channel " + channel);
         channelList[channel] = {'key': key, 'users': []};
         io.to(socket.id).emit('channel valid', channel);
     });
 }
 
 function deleteChannel(channel) {
-    console.log("Deleting channel " + channel);
+    winston.log("Deleting channel " + channel);
     delete channelList[channel];
     delete channelDeletionTimeouts[channel];
 }
 
 function addUserToChannel(socket, channel) {
     var user = socket.id;
-    console.log("User " + user + " joined channel " + channel);
+    winston.log("User " + user + " joined channel " + channel);
     userList[user] = channel;
     if (!channelList[channel]) {
-        console.error("Channel doesn't exist! (this shouldn't happen)");
+        winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
     socket.join(channel);
     channelList[channel]['users'].push(user);
@@ -106,24 +107,24 @@ function addUserToChannel(socket, channel) {
 }
 
 function disconnectUser(user) {
-    console.log("User " + user + " disconnected");
+    winston.log("User " + user + " disconnected");
     var channel = userList[user];
     delete userList[user];
     if (!channelList[channel]) {
-        console.error("Channel doesn't exist! (this shouldn't happen)");
+        winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
     // Remove user from list
     channelList[channel]['users'].splice(channelList[channel]['users'].indexOf(user), 1);
 }
 
 function getThroneData(channel, key, callback) {
-    console.log("Checking data for channel " + channel);
+    winston.log("Checking data for channel " + channel);
     var url = 'https://tb-api.xyz/stream/get?s=' + channel + '&key=' + key;
     request.get(url, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             callback(null, channel, JSON.parse(body));
         } else {
-            console.log("Didn't work: " + response.statusCode);
+            winston.log("Didn't work: " + response.statusCode);
             callback(new Error(response.statusCode));
         }
     });
@@ -132,9 +133,9 @@ function getThroneData(channel, key, callback) {
 function sendEventNotifications(channel, data) {
     if (data['current'] != null) {
         var currentLastHit = data['current']['lasthit'];
-        console.info("currentLastHit: " + currentLastHit);
+        winston.info("currentLastHit: " + currentLastHit);
         if (data['current']['health'] < previousHealth) {
-            console.info("hurt: " + enemy[currentLastHit]);
+            winston.info("hurt: " + enemy[currentLastHit]);
             io.to(channel).emit('hurt', enemy[currentLastHit])
         }
         previousHealth = data['current']['health']
@@ -143,7 +144,7 @@ function sendEventNotifications(channel, data) {
         && data['previous']['health'] < previousHealth) {
         previousHealth = 0;
         var previousLastHit = data['previous']['lasthit'];
-        console.info("dead: " + enemy[previousLastHit]);
+        winston.info("dead: " + enemy[previousLastHit]);
         io.to(channel).emit('dead', enemy[previousLastHit])
     }
 }
