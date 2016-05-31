@@ -9,11 +9,21 @@ var openid = require('./openid');
 var throneLogic = require('./throne_logic');
 
 winston.remove(winston.transports.Console);
-winston.add(winston.transports.Console, {
-    'timestamp': function() {
-        return dateFormat(new Date());
-    }, 'colorize': true
-});
+if (process.argv[2] == 'debug') {
+    winston.add(winston.transports.Console, {
+        'timestamp': function() {
+            return dateFormat(new Date());
+        }, 'colorize': true,
+        level: 'debug'
+    });
+    winston.debug("--- Starting in debug mode ---")
+} else {
+    winston.add(winston.transports.Console, {
+        'timestamp': function() {
+            return dateFormat(new Date());
+        }, 'colorize': true
+    });
+}
 
 var config;
 

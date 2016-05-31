@@ -13,7 +13,7 @@ var channelDeletionTimeouts = {}; // Dictionary of channel name -> timeout refer
 module.exports = function(http) {
     var io = socketio(http);
     io.on('connection', function (socket) {
-        winston.log("User " + socket.id + " connected");
+        winston.info("User " + socket.id + " connected");
         socket.on('create channel', function (channel, key) {
             createChannel(socket, channel, key);
         });
@@ -32,7 +32,7 @@ module.exports = function(http) {
             }
         });
         socket.on('disconnect', function () {
-            winston.log("Disconnect event: " + socket.id)
+            winston.debug("Disconnect event: " + socket.id)
         });
     });
 
@@ -46,7 +46,7 @@ function mainLoop() {
 
             if (channelList[channel]['users'].length > 0) {
                 if (channelDeletionTimeouts[channel]) {
-                    winston.log("Channel " + channel + " no longer empty, cancelling timeout");
+                    winston.info("Channel " + channel + " no longer empty, cancelling timeout");
                     clearTimeout(channelDeletionTimeouts[channel]);
                     delete channelDeletionTimeouts[channel];
                 }
@@ -60,7 +60,7 @@ function mainLoop() {
             }
             else {
                 if (!channelDeletionTimeouts[channel]) {
-                    winston.log("Channel " + channel + " is now empty, removing in a minute");
+                    winston.info("Channel " + channel + " is now empty, removing in a minute");
                     channelDeletionTimeouts[channel] = setTimeout(deleteChannel.bind(this, channel), 60000);
                 }
             }
@@ -71,7 +71,7 @@ function mainLoop() {
 function createChannel(socket, channel, key) {
     getThroneData(channel, key, function (error) {
         if (error) {
-            winston.log("Channel " + channel + " could not be created, " + error);
+            winston.warn("Channel " + channel + " could not be created, " + error);
             if (error.message == 403) {
                 io.to(socket.id).emit('error', "Wrong key!");
             } else {
@@ -79,21 +79,21 @@ function createChannel(socket, channel, key) {
             }
             return;
         }
-        winston.log("Creating channel " + channel);
+        winston.info("Creating channel " + channel);
         channelList[channel] = {'key': key, 'users': []};
         io.to(socket.id).emit('channel valid', channel);
     });
 }
 
 function deleteChannel(channel) {
-    winston.log("Deleting channel " + channel);
+    winston.info("Deleting channel " + channel);
     delete channelList[channel];
     delete channelDeletionTimeouts[channel];
 }
 
 function addUserToChannel(socket, channel) {
     var user = socket.id;
-    winston.log("User " + user + " joined channel " + channel);
+    winston.verbose("User " + user + " joined channel " + channel);
     userList[user] = channel;
     if (!channelList[channel]) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
@@ -107,7 +107,7 @@ function addUserToChannel(socket, channel) {
 }
 
 function disconnectUser(user) {
-    winston.log("User " + user + " disconnected");
+    winston.verbose("User " + user + " disconnected");
     var channel = userList[user];
     delete userList[user];
     if (!channelList[channel]) {
@@ -118,13 +118,13 @@ function disconnectUser(user) {
 }
 
 function getThroneData(channel, key, callback) {
-    winston.log("Checking data for channel " + channel);
+    winston.debug("Checking data for channel " + channel);
     var url = 'https://tb-api.xyz/stream/get?s=' + channel + '&key=' + key;
     request.get(url, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             callback(null, channel, JSON.parse(body));
         } else {
-            winston.log("Didn't work: " + response.statusCode);
+            winston.error("Didn't work: " + response.statusCode);
             callback(new Error(response.statusCode));
         }
     });

@@ -12,7 +12,7 @@ module.exports = function(app, address, port) {
         },
         // "validate" callback
         function (identifier, done) {
-            winston.log('user: ' + identifier);
+            winston.debug('Validated user: ', identifier);
             var user = {
                 identifier: identifier,
                 steamId: identifier.match(/\d+$/)[0]
