@@ -40,30 +40,30 @@ openid(app, server_ip_address, server_port);
 app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {
-    res.render(__dirname + '/client/index.ejs', {
+    res.render(__dirname + '/public/index.ejs', {
         user: req.user
     });
     winston.debug("User is", req.user);
 });
 
 app.get('/channel/[a-z0-9]+', function(req, res) {
-    res.sendFile(__dirname + '/client/channel.html');
+    res.sendFile(__dirname + '/public/channel.html');
 });
 
 app.get('/index.js', function(req, res) {
-    res.sendFile(__dirname + '/client/index.js');
+    res.sendFile(__dirname + '/public/index.js');
 });
 
 app.get('/channel/channel.js', function(req, res) {
-    res.sendFile(__dirname + '/client/channel.js');
+    res.sendFile(__dirname + '/public/channel.js');
 });
 
 app.get('/main.css', function(req, res) {
-    res.sendFile(__dirname + '/client/main.css');
+    res.sendFile(__dirname + '/public/main.css');
 });
 
 app.get('/images/:file', function(req, res) {
-    res.sendFile(__dirname + '/client/images/' + req.params.file);
+    res.sendFile(__dirname + '/public/images/' + req.params.file);
 });
 
 
