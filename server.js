@@ -3,6 +3,7 @@ var ejs = require('ejs');
 var app = require('express')();
 var session = require('express-session');
 var http = require('http').Server(app);
+var request = require('request');
 var winston = require('winston');
 
 var openid = require('./openid');
@@ -50,10 +51,24 @@ openid(app, server_ip_address, server_port);
 app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {
-    res.render(__dirname + '/public/index.ejs', {
-        user: req.user
-    });
     winston.debug("User is", req.user);
+    if (req.user) {
+        getSteamUsernameFromId(req.user.steamId, function(error, name) {
+            if (error) {
+                res.render(__dirname + '/public/index.ejs', {
+                    user: req.user.steamId
+                });
+            } else {
+                res.render(__dirname + '/public/index.ejs', {
+                    user: name
+                });
+            }
+        });
+    } else {
+        res.render(__dirname + '/public/index.ejs', {
+            user: null
+        });
+    }
 });
 
 app.get('/channel/[a-z0-9]+', function(req, res) {
@@ -83,3 +98,20 @@ http.listen(server_port, server_ip_address, function() {
 
 // Set socket connections and throne logic main loop
 throneLogic(http);
+
+
+function getSteamUsernameFromId(id, callback) {
+    var url = 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/' +
+        '?key=' + config['steamAPI_key'] +
+        '&steamids=' + id;
+    request.get(url, function(error, response, body) {
+        if (!error && response.statusCode == 200) {
+            var name = JSON.parse(body)['response']['players'][0]['personaname'];
+            callback(null, name);
+        } else {
+            winston.error("Couldn't fetch Steam username: " + response.statusCode);
+            callback(new Error(response.statusCode));
+        }
+    });
+
+}

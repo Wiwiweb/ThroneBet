@@ -69,6 +69,8 @@ function mainLoop() {
 }
 
 function createChannel(socket, channel, key) {
+    // Check if channel is correct
+    // We don't actually care about the data, just that it returns OK
     getThroneData(channel, key, function (error) {
         if (error) {
             winston.warn("Channel " + channel + " could not be created, " + error);
