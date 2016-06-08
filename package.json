@@ -2,6 +2,7 @@
   "name": "throne-bet",
   "version": "0.0.1",
   "dependencies": {
+    "connect-pg-simple": "latest",
     "dateformat": "latest",
     "ejs": "latest",
     "express": "latest",

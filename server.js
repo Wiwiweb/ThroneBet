@@ -2,6 +2,7 @@ var dateFormat = require('dateformat');
 var ejs = require('ejs');
 var app = require('express')();
 var session = require('express-session');
+var pgSession = require('connect-pg-simple')(session);
 var http = require('http').Server(app);
 var request = require('request');
 var winston = require('winston');
@@ -38,8 +39,12 @@ catch (err) {
 
 var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 var server_port = process.env.OPENSHIFT_NODEJS_PORT || 4000;
+var db_url = process.env.OPENSHIFT_POSTGRESQL_DB_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/postgres';
 
 app.use(session({
+    store: new pgSession({
+        conString: db_url
+    }),
     secret: config['session_secret'],
     resave: false,
     saveUninitialized: true
