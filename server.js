@@ -7,6 +7,7 @@ var http = require('http').Server(app);
 var request = require('request');
 var winston = require('winston');
 
+var config = require('./config');
 var openid = require('./openid');
 var throneLogic = require('./throne_logic');
 
@@ -25,15 +26,6 @@ if (process.argv[2] == 'debug') {
             return dateFormat(new Date());
         }, 'colorize': true
     });
-}
-
-var config;
-try {
-    config = require('./secrets');
-}
-catch (err) {
-    console.error("Unable to read secrets config file", err);
-    process.exit(1);
 }
 
 var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';

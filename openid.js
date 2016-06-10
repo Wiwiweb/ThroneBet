@@ -5,16 +5,7 @@ var pg = require('pg');
 var request = require('request');
 var winston = require('winston');
 
-// TODO: Copy paste is baaaaad
-var config;
-try {
-    config = require('./secrets');
-}
-catch (err) {
-    console.error("Unable to read secrets config file", err);
-    process.exit(1);
-}
-
+var config = require('./config');
 
 module.exports = function(app, address, port, db_url) {
     var steamStrategy = new OpenidStrategy({
