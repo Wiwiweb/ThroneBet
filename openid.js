@@ -59,8 +59,8 @@ module.exports = function(app, address, port, db_url) {
         });
 
     passport.use(steamStrategy);
-    passport.serializeUser(passportSeralise);
-    passport.deserializeUser(passportDeserialise);
+    passport.serializeUser(passportSeralize);
+    passport.deserializeUser(passportDeserialize);
 
     app.use(passport.initialize());
     app.use(passport.session());
@@ -83,19 +83,21 @@ module.exports = function(app, address, port, db_url) {
     });
 };
 
-function passportSeralise(user, done) {
-    winston.debug("Serialised user: ", user.name);
+function passportSeralize(user, done) {
+    winston.debug("Serialized user:", user.name);
     done(null, user.identifier);
 }
 
-function passportDeserialise(identifier, done) {
+function passportDeserialize(identifier, done) {
+    // TODO get rid of this ugly global by modularizing database connects
+    winston.debug("Deserializing user:", identifier);
     pg.connect(db_url, function(err, client, pgdone) {
         if (err) {
             winston.error("Error fetching client from pool", err);
             done(err);
             return;
         }
-        client.query("SELECT * FROM users WHERE steamid=$1", [identifier], function(err, result) {
+        client.query("SELECT * FROM users WHERE openid_identifier=$1", [identifier], function(err, result) {
             pgdone();
             if (err) {
                 winston.error("Error running query", err);
@@ -107,7 +109,7 @@ function passportDeserialise(identifier, done) {
                 done(err);
                 return;
             }
-            winston.debug("Deserialised user: ", result.rows[0].name);
+            winston.debug("Deserialized user:", result.rows[0].name);
             done(null, {
                 identifier: identifier,
                 steamId: result.rows[0].steamid,

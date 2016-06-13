@@ -30,7 +30,7 @@ if (process.argv[2] == 'debug') {
 
 var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 var server_port = process.env.OPENSHIFT_NODEJS_PORT || 4000;
-var db_url = process.env.OPENSHIFT_POSTGRESQL_DB_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/postgres';
+global.db_url = process.env.OPENSHIFT_POSTGRESQL_DB_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/postgres';
 
 app.use(session({
     store: new pgSession({
@@ -50,7 +50,7 @@ app.get('/', function(req, res) {
         winston.debug("User is", req.user);
         if (req.user) {
             res.render(__dirname + '/public/index.ejs', {
-                user: user.name
+                user: req.user.name
             });
         } else {
             res.render(__dirname + '/public/index.ejs', {
