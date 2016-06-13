@@ -9,11 +9,11 @@
     "express-session": "latest",
     "openid": "latest",
     "passport": "latest",
-    "passport-openid": "latest",
+    "passport-steam": "~1.0.2",
+    "pg": "~5.0.0",
     "request": "latest",
     "socket.io": "latest",
-    "winston": "latest",
-    "pg": "~5.0.0"
+    "winston": "latest"
   },
   "scripts": {
     "start": "supervisor server.js"

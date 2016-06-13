@@ -1,6 +1,6 @@
 var openid = require('openid');
 var passport = require('passport');
-var OpenidStrategy = require('passport-openid').Strategy;
+var SteamStrategy = require('passport-steam').Strategy;
 var pg = require('pg');
 var request = require('request');
 var winston = require('winston');
@@ -8,14 +8,13 @@ var winston = require('winston');
 var config = require('./config');
 
 module.exports = function(app, address, port, db_url) {
-    var steamStrategy = new OpenidStrategy({
-            providerURL: 'http://steamcommunity.com/openid',
-            stateless: true,
+    var steamStrategy = new SteamStrategy({
             returnURL: 'http://' + address + ':' + port + '/auth/return',
-            realm: 'http://' + address + ':' + port
+            realm: 'http://' + address + ':' + port,
+            apiKey: config['steamAPI_key']
         },
-        function validate(identifier, done) {
-            winston.debug("Validated user: ", identifier);
+        function validate(identifier, profile, done) {
+            winston.debug("Validated user:", profile);
             pg.connect(db_url, function(err, client, pgdone) {
                 if (err) {
                     return winston.error("Error fetching client from pool", err);
@@ -25,50 +24,48 @@ module.exports = function(app, address, port, db_url) {
                     if (err) {
                         return winston.error("Error running query", err);
                     }
-                    var steamid = identifier.match(/\d+$/)[0];
-                    getSteamUsernameFromId(steamid, function(err, name) {
-                        var points;
-                        if (result.rows.length == 0) {
-                            winston.debug("User doesn't exist, creating: ", identifier);
-                            var query =
-                                "INSERT INTO users (openid_identifier, name, steamid, points) " +
-                                "VALUES ($1, $2, $3, $4)";
-                            points = 0;
-                            var parameters = [identifier, name, steamid, points];
-                            client.query(query, parameters, function(err) {
-                                if (err) {
-                                    return winston.error("Error running query", err);
-                                }
-                                winston.info("Created user: ", name);
-                            });
-                        } else {
-                            winston.debug("Found user: ", identifier);
-                            points = result.rows[0].points
-                        }
-                        pgdone();
-                        var user = {
-                            identifier: identifier,
-                            steamId: steamid,
-                            name: name,
-                            points: points
-                        };
-                        return done(null, user);
-                    });
+                    var steamid = profile.id;
+                    var points;
+                    if (result.rows.length == 0) {
+                        winston.debug("User doesn't exist, creating:", profile.displayName);
+                        var query =
+                            "INSERT INTO users (openid_identifier, name, steamid, points) " +
+                            "VALUES ($1, $2, $3, $4)";
+                        points = 0;
+                        var parameters = [identifier, profile.displayName, steamid, points];
+                        client.query(query, parameters, function(err) {
+                            if (err) {
+                                return winston.error("Error running query", err);
+                            }
+                            winston.info("Created user: ", profile.displayName);
+                        });
+                    } else {
+                        winston.debug("Found user: ", profile.displayName);
+                        points = result.rows[0].points
+                    }
+                    pgdone();
+                    var user = {
+                        identifier: identifier,
+                        steamId: steamid,
+                        name: profile.displayName,
+                        points: points
+                    };
+                    return done(null, user);
                 });
             });
         });
 
     passport.use(steamStrategy);
-    passport.serializeUser(passportSeralize);
+    passport.serializeUser(passportSerialize);
     passport.deserializeUser(passportDeserialize);
 
     app.use(passport.initialize());
     app.use(passport.session());
 
 
-    app.get('/auth', passport.authenticate('openid'));
+    app.get('/auth', passport.authenticate('steam'));
 
-    app.get('/auth/return', passport.authenticate('openid'),
+    app.get('/auth/return', passport.authenticate('steam'),
         function(req, res) {
             if (req.user) {
                 res.redirect('/?steamid=' + req.user.steamId);
@@ -83,14 +80,13 @@ module.exports = function(app, address, port, db_url) {
     });
 };
 
-function passportSeralize(user, done) {
+function passportSerialize(user, done) {
     winston.debug("Serialized user:", user.name);
     done(null, user.identifier);
 }
 
 function passportDeserialize(identifier, done) {
     // TODO get rid of this ugly global by modularizing database connects
-    winston.debug("Deserializing user:", identifier);
     pg.connect(db_url, function(err, client, pgdone) {
         if (err) {
             winston.error("Error fetching client from pool", err);
@@ -117,21 +113,5 @@ function passportDeserialize(identifier, done) {
                 points: result.rows[0].points
             });
         });
-    });
-}
-
-function getSteamUsernameFromId(id, callback) {
-    var url = 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/' +
-        '?key=' + config['steamAPI_key'] +
-        '&steamids=' + id;
-    request.get(url, function(error, response, body) {
-        if (!error && response.statusCode == 200) {
-            winston.debug(body);
-            var name = JSON.parse(body)['response']['players'][0]['personaname'];
-            callback(null, name);
-        } else {
-            winston.error("Couldn't fetch Steam username: " + response.statusCode);
-            callback(new Error(response.statusCode));
-        }
     });
 }
