@@ -8,6 +8,7 @@ var request = require('request');
 var winston = require('winston');
 
 var config = require('./config');
+var db = require('./db');
 var openid = require('./openid');
 var throneLogic = require('./throne_logic');
 
@@ -28,13 +29,12 @@ if (process.argv[2] == 'debug') {
     });
 }
 
-var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
-var server_port = process.env.OPENSHIFT_NODEJS_PORT || 4000;
-global.db_url = process.env.OPENSHIFT_POSTGRESQL_DB_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/postgres';
+var serverIpAddress = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
+var serverPort = process.env.OPENSHIFT_NODEJS_PORT || 4000;
 
 app.use(session({
     store: new pgSession({
-        conString: db_url
+        conString: db.dbUrl
     }),
     secret: config['session_secret'],
     resave: false,
@@ -42,7 +42,7 @@ app.use(session({
 }));
 
 // Set up openID routes and callbacks
-openid(app, server_ip_address, server_port, db_url);
+openid(app, serverIpAddress, serverPort);
 
 app.set('view engine', 'ejs');
 
@@ -81,8 +81,8 @@ app.get('/images/:file', function(req, res) {
 });
 
 
-http.listen(server_port, server_ip_address, function() {
-    winston.info("Listening on http://" + server_ip_address + ":" + server_port);
+http.listen(serverPort, serverIpAddress, function() {
+    winston.info("Listening on http://" + serverIpAddress + ":" + serverPort);
 });
 
 // Set socket connections and throne logic main loop
