@@ -6,15 +6,21 @@ var dbUrl = process.env.OPENSHIFT_POSTGRESQL_DB_URL || 'postgresql://postgres:po
 module.exports = query;
 module.exports.dbUrl = dbUrl;
 
-function query(query, values, callback) {
-    pg.connect(dbUrl, function(err, client, done) {
-        if (err) {
-            winston.error("Error fetching client from pool", err);
-            callback(err, null);
-        }
-        client.query(query, values, function(err, result) {
-            done();
-            callback(err, result);
-        })
-    });
+function query(query, values) {
+    return new Promise(queryPromise);
+
+    function queryPromise(resolve, reject) {
+        pg.connect(dbUrl, function(err, client, done) {
+            if (err) {
+                reject(winston.error("Error fetching client from pool:", err));
+            }
+            client.query(query, values, function(err, result) {
+                done();
+                if (err) {
+                    reject(winston.error("Error executing query:", err, query, values));
+                }
+                resolve(result);
+            })
+        });
+    }
 }

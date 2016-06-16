@@ -4,7 +4,6 @@ var app = require('express')();
 var session = require('express-session');
 var pgSession = require('connect-pg-simple')(session);
 var http = require('http').Server(app);
-var request = require('request');
 var winston = require('winston');
 
 var config = require('./config');
