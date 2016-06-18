@@ -9,7 +9,7 @@ var winston = require('winston');
 var config = require('./config');
 var db = require('./db');
 var openid = require('./openid');
-var throneLogic = require('./throne_logic');
+var throneLogic = require('./throneLogic');
 
 winston.remove(winston.transports.Console);
 if (process.argv[2] == 'debug') {
@@ -33,14 +33,19 @@ if (process.argv[2] == 'debug') {
 var serverIpAddress = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 var serverPort = process.env.OPENSHIFT_NODEJS_PORT || 4000;
 
-app.use(session({
-    store: new pgSession({
-        conString: db.dbUrl
-    }),
+var sessionStore = new pgSession({
+    conString: db.dbUrl
+});
+var configuredSession = session({
+    store: sessionStore,
     secret: config['session_secret'],
     resave: false,
     saveUninitialized: true
-}));
+});
+module.exports.configuredSession = configuredSession;
+module.exports.sessionStore = sessionStore;
+
+app.use(configuredSession);
 
 // Set up openID routes and callbacks
 openid(app, serverIpAddress, serverPort);

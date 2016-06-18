@@ -1,8 +1,13 @@
+var cookieParser = require('cookie-parser');
 var socketio = require('socket.io');
+var session = require('express-session');
+var passportSocketIo = require("passport.socketio");
 var request = require('request');
 var winston = require('winston');
 
+var config = require('./config');
 var enemy = require('./enemyData');
+var server = require('./server');
 
 var previousHealth = 0;
 
@@ -12,8 +17,13 @@ var channelDeletionTimeouts = {}; // Dictionary of channel name -> timeout refer
 
 module.exports = function(http) {
     var io = socketio(http);
+    io.use(passportSocketIo.authorize({
+        store: server.sessionStore,
+        secret: config['session_secret'],
+        cookieParser: cookieParser
+    }));
     io.on('connection', function (socket) {
-        winston.info("User " + socket.id + " connected");
+        winston.info("User connected: ", socket.request.user);
         socket.on('create channel', function (channel, key) {
             createChannel(socket, channel, key);
         });

@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "connect-pg-simple": "latest",
+    "cookie-parser": "^1.4.3",
     "dateformat": "latest",
     "ejs": "latest",
     "express": "latest",
@@ -10,6 +11,7 @@
     "openid": "latest",
     "passport": "latest",
     "passport-steam": "~1.0.2",
+    "passport.socketio": "^3.6.1",
     "pg": "~5.0.0",
     "request": "latest",
     "socket.io": "latest",
