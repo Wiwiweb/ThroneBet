@@ -26,8 +26,7 @@ if (process.argv[2] == 'debug') {
             return dateFormat(new Date());
         }, 'colorize': true
     });
-    db("TRUNCATE sessions");
-    db("TRUNCATE users");
+    db("TRUNCATE session");
 }
 
 var serverIpAddress = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
