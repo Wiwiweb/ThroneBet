@@ -3,6 +3,7 @@ var ejs = require('ejs');
 var app = require('express')();
 var session = require('express-session');
 var pgSession = require('connect-pg-simple')(session);
+var pg = require('pg');
 var http = require('http').Server(app);
 var winston = require('winston');
 
@@ -36,6 +37,7 @@ var sessionStore = new pgSession({
     conString: db.dbUrl
 });
 var configuredSession = session({
+    pg: pg,
     store: sessionStore,
     secret: config['session_secret'],
     resave: false,
