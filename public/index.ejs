@@ -11,7 +11,7 @@
     <% if(user) { %>
         Logged in as <%= JSON.stringify(user) %><br/>
         <form id="createChannelForm">
-        <input type="hidden" id="createChannelInput" value="<%= user.steamId %>">
+        <input type="hidden" id="createChannelInput" value="<%= steamId %>">
         Key: <input type="text" id="createKeyInput"><br/>
         <input type="submit" value="Go">
         </form>

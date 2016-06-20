@@ -8,40 +8,44 @@ var winston = require('winston');
 var config = require('./config');
 var enemy = require('./enemyData');
 var server = require('./server');
+var User = require('./user');
+
+var io;
 
 var previousHealth = 0;
 
-var userList = {}; // Dictionary of user id -> channel the user is in
+var userList = {}; // Dictionary of user id -> user object
 var channelList = {}; // Dictionary of channel name -> channel object (contains key, list of users)
 var channelDeletionTimeouts = {}; // Dictionary of channel name -> timeout reference (to make sure there's only one)
 
 module.exports = function(http) {
-    var io = socketio(http);
+    io = socketio(http);
     io.use(passportSocketIo.authorize({
         store: server.sessionStore,
         secret: config['session_secret'],
         cookieParser: cookieParser
     }));
-    io.on('connection', function (socket) {
+    io.on('connection', function(socket) {
         winston.info("User connected: ", socket.request.user);
-        socket.on('create channel', function (channel, key) {
+        socket.on('create channel', function(channel, key) {
+            winston.debug("create channel", channel, key);
             createChannel(socket, channel, key);
         });
-        socket.on('check channel valid', function (channel) {
+        socket.on('check channel valid', function(channel) {
             if (channelList[channel]) {
                 io.to(socket.id).emit('channel valid', channel);
             } else {
                 io.to(socket.id).emit('throneError', "Channel does not exist!");
             }
         });
-        socket.on('join channel', function (channel) {
+        socket.on('join channel', function(channel) {
             if (channelList[channel]) {
                 addUserToChannel(socket, channel);
             } else {
                 io.to(socket.id).emit('throneError', "Channel does not exist!");
             }
         });
-        socket.on('disconnect', function () {
+        socket.on('disconnect', function() {
             winston.debug("Disconnect event: " + socket.id)
         });
     });
@@ -60,7 +64,7 @@ function mainLoop() {
                     clearTimeout(channelDeletionTimeouts[channel]);
                     delete channelDeletionTimeouts[channel];
                 }
-                var data = getThroneData(channel, channelList[channel]['key'], function (err, channel, data) {
+                var data = getThroneData(channel, channelList[channel]['key'], function(err, channel, data) {
                     if (err) {
                         winston.error("Error fetching Throne data! code: " + err);
                         return;
@@ -81,17 +85,17 @@ function mainLoop() {
 function createChannel(socket, channel, key) {
     // Check if channel is correct
     // We don't actually care about the data, just that it returns OK
-    getThroneData(channel, key, function (err) {
+    getThroneData(channel, key, function(err) {
         if (err) {
-            winston.warn("Channel " + channel + " could not be created, " + err);
-            if (error.message == 403) {
-                io.to(socket.id).emit('err', "Wrong key!");
+            winston.warn("Channel " + channel + " could not be created:", err);
+            if (err.message == 403) {
+                io.to(socket.id).emit('throneError', "Wrong key!");
             } else {
-                io.to(socket.id).emit('err', "Unknown error!");
+                io.to(socket.id).emit('throneError', "Unknown error!");
             }
             return;
         }
-        winston.info("Creating channel " + channel);
+        winston.info("Creating channel:", channel);
         channelList[channel] = {'key': key, 'users': []};
         io.to(socket.id).emit('channel valid', channel);
     });
@@ -104,35 +108,36 @@ function deleteChannel(channel) {
 }
 
 function addUserToChannel(socket, channel) {
-    var user = socket.id;
-    winston.verbose("User " + user + " joined channel " + channel);
-    userList[user] = channel;
+    var user = socket.request.user;
+    var id = socket.id;
+    winston.verbose("User " + user.name + " joined channel " + channel);
+    userList[id] = new User(user.name, user.steamId, user.identifier, user.points, channel);
     if (!channelList[channel]) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
     socket.join(channel);
     channelList[channel]['users'].push(user);
-    socket.on('disconnect', function () {
+    socket.on('disconnect', function() {
         disconnectUser(socket.id);
     });
     io.to(socket.id).emit('connected');
 }
 
-function disconnectUser(user) {
-    winston.verbose("User " + user + " disconnected");
-    var channel = userList[user];
-    delete userList[user];
+function disconnectUser(userId) {
+    winston.verbose("User " + userList[userId].name + " disconnected");
+    var channel = userList[userId].channel;
+    delete userList[userId];
     if (!channelList[channel]) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
     // Remove user from list
-    channelList[channel]['users'].splice(channelList[channel]['users'].indexOf(user), 1);
+    channelList[channel]['users'].splice(channelList[channel]['users'].indexOf(userId), 1);
 }
 
 function getThroneData(channel, key, callback) {
     winston.debug("Checking data for channel " + channel);
     var url = 'https://tb-api.xyz/stream/get?s=' + channel + '&key=' + key;
-    request.get(url, function (err, response, body) {
+    request.get(url, function(err, response, body) {
         if (!err && response.statusCode == 200) {
             callback(null, channel, JSON.parse(body));
         } else {

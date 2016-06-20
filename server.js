@@ -57,7 +57,8 @@ app.get('/', function(req, res) {
         winston.debug("User is", req.user);
         if (req.user) {
             res.render(__dirname + '/public/index.ejs', {
-                user: req.user.name
+                user: req.user.name,
+                steamId: req.user.steamId
             });
         } else {
             res.render(__dirname + '/public/index.ejs', {
