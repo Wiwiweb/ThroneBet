@@ -16,7 +16,7 @@ $(document).ready(function() {
 });
 
 
-socket.on('error', function(msg) {
+socket.on('throneError', function(msg) {
     alert(msg);
 });
 

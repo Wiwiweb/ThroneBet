@@ -31,14 +31,14 @@ module.exports = function(http) {
             if (channelList[channel]) {
                 io.to(socket.id).emit('channel valid', channel);
             } else {
-                io.to(socket.id).emit('error', "Channel does not exist!");
+                io.to(socket.id).emit('throneError', "Channel does not exist!");
             }
         });
         socket.on('join channel', function (channel) {
             if (channelList[channel]) {
                 addUserToChannel(socket, channel);
             } else {
-                io.to(socket.id).emit('error', "Channel does not exist!");
+                io.to(socket.id).emit('throneError', "Channel does not exist!");
             }
         });
         socket.on('disconnect', function () {
@@ -60,9 +60,9 @@ function mainLoop() {
                     clearTimeout(channelDeletionTimeouts[channel]);
                     delete channelDeletionTimeouts[channel];
                 }
-                var data = getThroneData(channel, channelList[channel]['key'], function (error, channel, data) {
-                    if (error) {
-                        winston.error("Error fetching Throne data! code: " + error);
+                var data = getThroneData(channel, channelList[channel]['key'], function (err, channel, data) {
+                    if (err) {
+                        winston.error("Error fetching Throne data! code: " + err);
                         return;
                     }
                     sendEventNotifications(channel, data);
@@ -81,13 +81,13 @@ function mainLoop() {
 function createChannel(socket, channel, key) {
     // Check if channel is correct
     // We don't actually care about the data, just that it returns OK
-    getThroneData(channel, key, function (error) {
-        if (error) {
-            winston.warn("Channel " + channel + " could not be created, " + error);
+    getThroneData(channel, key, function (err) {
+        if (err) {
+            winston.warn("Channel " + channel + " could not be created, " + err);
             if (error.message == 403) {
-                io.to(socket.id).emit('error', "Wrong key!");
+                io.to(socket.id).emit('err', "Wrong key!");
             } else {
-                io.to(socket.id).emit('error', "Unknown error!");
+                io.to(socket.id).emit('err', "Unknown error!");
             }
             return;
         }
@@ -132,8 +132,8 @@ function disconnectUser(user) {
 function getThroneData(channel, key, callback) {
     winston.debug("Checking data for channel " + channel);
     var url = 'https://tb-api.xyz/stream/get?s=' + channel + '&key=' + key;
-    request.get(url, function (error, response, body) {
-        if (!error && response.statusCode == 200) {
+    request.get(url, function (err, response, body) {
+        if (!err && response.statusCode == 200) {
             callback(null, channel, JSON.parse(body));
         } else {
             winston.error("Didn't work: " + response.statusCode);
