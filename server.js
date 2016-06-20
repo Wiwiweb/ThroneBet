@@ -20,14 +20,14 @@ if (process.argv[2] == 'debug') {
         }, 'colorize': true,
         level: 'debug'
     });
-    winston.debug("--- Starting in debug mode ---")
+    winston.debug("--- Starting in debug mode ---");
+    db("TRUNCATE session");
 } else {
     winston.add(winston.transports.Console, {
         'timestamp': function() {
             return dateFormat(new Date());
         }, 'colorize': true
     });
-    db("TRUNCATE session");
 }
 
 var serverIpAddress = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
