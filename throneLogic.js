@@ -1,7 +1,7 @@
 var cookieParser = require('cookie-parser');
 var socketio = require('socket.io');
 var session = require('express-session');
-var passportSocketIo = require("passport.socketio");
+var passportSocketIo = require('passport.socketio');
 var request = require('request');
 var winston = require('winston');
 
@@ -14,7 +14,7 @@ var io;
 
 var previousHealth = 0;
 
-var userList = {}; // Dictionary of user id -> user object
+var userList = {}; // Dictionary of user socketId -> user object
 var channelList = {}; // Dictionary of channel name -> channel object (contains key, list of users)
 var channelDeletionTimeouts = {}; // Dictionary of channel name -> timeout reference (to make sure there's only one)
 
@@ -26,7 +26,7 @@ module.exports = function(http) {
         cookieParser: cookieParser
     }));
     io.on('connection', function(socket) {
-        winston.info("User connected: ", socket.request.user);
+        winston.info("User socket connected: ", socket.request.user);
         socket.on('create channel', function(channel, key) {
             winston.debug("create channel", channel, key);
             createChannel(socket, channel, key);
@@ -45,8 +45,9 @@ module.exports = function(http) {
                 io.to(socket.id).emit('throneError', "Channel does not exist!");
             }
         });
-        socket.on('disconnect', function() {
-            winston.debug("Disconnect event: " + socket.id)
+        socket.on('place bet', function(betTarget) {
+            winston.debug(socket.request.user.name + " placed a bet:", betTarget);
+            placeBet(socket, betTarget);
         });
     });
 
@@ -111,12 +112,13 @@ function addUserToChannel(socket, channel) {
     var user = socket.request.user;
     var id = socket.id;
     winston.verbose("User " + user.name + " joined channel " + channel);
-    userList[id] = new User(user.name, user.steamId, user.identifier, user.points, channel);
+    var userObject = new User(user.name, user.steamId, user.identifier, user.points, channel, socket.id);
+    userList[id] = userObject;
     if (!channelList[channel]) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
     socket.join(channel);
-    channelList[channel]['users'].push(user);
+    channelList[channel]['users'].push(userObject);
     socket.on('disconnect', function() {
         disconnectUser(socket.id);
     });
@@ -131,7 +133,7 @@ function disconnectUser(userId) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
     // Remove user from list
-    channelList[channel]['users'].splice(channelList[channel]['users'].indexOf(userId), 1);
+    channelList[channel]['users'].splice(channelList[channel]['users'].indexOf(userList[userId]), 1);
 }
 
 function getThroneData(channel, key, callback) {
@@ -145,6 +147,11 @@ function getThroneData(channel, key, callback) {
             callback(new Error(response.statusCode));
         }
     });
+}
+
+function placeBet(socket, betTarget) {
+    var user = userList[socket.id];
+    user.currentBets[betTarget] = 1;
 }
 
 function sendEventNotifications(channel, data) {
@@ -161,7 +168,21 @@ function sendEventNotifications(channel, data) {
         && data['previous']['health'] < previousHealth) {
         previousHealth = 0;
         var previousLastHit = data['previous']['lasthit'];
-        winston.info("dead: " + enemy[previousLastHit]);
+        winston.info("Channel " + channel + " died from:", enemy[previousLastHit]);
+        awardPoints(channel, enemy[previousLastHit]);
         io.to(channel).emit('dead', enemy[previousLastHit])
     }
+}
+
+function awardPoints(channel, deathCause) {
+    var users = channelList[channel]['users'];
+    users.forEach(function(user) {
+        if (user.currentBets) {
+            if (user.currentBets[deathCause]) {
+                user.points++; // Can I use the passport.socketio user to save it to database directly on deserialization?
+                winston.info(user.name + " got a point");
+                io.to(user.socketId).emit('gainPoints', 1)
+            }
+        }
+    });
 }
