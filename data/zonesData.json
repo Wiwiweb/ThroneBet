@@ -1,0 +1,94 @@
+{
+  "Desert": [
+    "Any Desert",
+    "Bandit",
+    "Maggot",
+    "Rad Maggot",
+    "Big Maggot",
+    "Scorpion",
+    "Gold Scorpion",
+    "Big Bandit"
+  ],
+  "Sewers": [
+    "Rat",
+    "Rat King",
+    "Green Rat",
+    "Gator",
+    "Buff Gator",
+    "Ballguy",
+    "Toxic Ballguy",
+    "Mom"
+  ],
+  "Wasteland": [
+    "Raven",
+    "Assassin",
+    "Salamander",
+    "Sniper",
+    "Big Dog"
+  ],
+  "Crystal Caves": [
+    "Spider",
+    "Laser Crystal",
+    "Cursed Spider",
+    "Cursed Crystal",
+    "Lightning Crystal",
+    "Hyper Crystal"
+  ],
+  "Snow City": [
+    "Snow Bandit",
+    "Snowbot",
+    "Wolf",
+    "Snowtank",
+    "Golden Snowtank",
+    "Lil Hunter"
+  ],
+  "Labs": [
+    "Freak",
+    "Explo Freak",
+    "Rhino Freak",
+    "Turret"
+  ],
+  "Palace": [
+    "Guardian",
+    "Explo Guardian",
+    "Dog Guardian",
+    "Throne",
+    "Throne II"
+  ],
+  "Cops": [
+    "Grunt",
+    "Inspector",
+    "Shielder",
+    "Van",
+    "Elite Grunt",
+    "Elite Inspector",
+    "Elite Shielder",
+    "IDPD Freak",
+    "Captain"
+  ],
+  "Secret": [
+    "Bone Fish",
+    "Crab",
+    "Turtle",
+    "Venus Grunt",
+    "Venus Sarge",
+    "Fireballer",
+    "Super Fireballer",
+    "Jock",
+    "Jungle Bandit",
+    "Jungle Assassin",
+    "Jungle Fly"
+  ],
+  "Other": [
+    "Crown Guardian",
+    "Mimic",
+    "Health Mimic",
+    "Explosion",
+    "Doodad",
+    "Toxin",
+    "Horror",
+    "Cursed Ammo Pickup",
+    "Disc",
+    "Player Stupidity"
+  ]
+}

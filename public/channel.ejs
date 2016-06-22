@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ThroneBet</title>
+    <link rel="stylesheet" href="../channel.css"/>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="channel.js"></script>
+</head>
+<body>
+<div>
+    <ul id="messages"></ul>
+</div>
+<div id="betChoices">
+    <% for (var i = 0; i < Object.keys(zones).length; i++) {
+        var zoneName = Object.keys(zones)[i];
+        var zone = zones[zoneName];
+    %>
+        <div class="zone" id="<%=zoneName.toLowerCase().replace(' ', '-')%>-zone">
+        <% for (var j = 0; j < zone.length; j++) {
+            var death = zone[j];
+            var deathShort = death.toLowerCase().replace(' ', '-');
+        %>
+            <div class="death" id="<%=deathShort%>-death">
+                <img src="../images/placeholder-death.jpg" title="<%=death%>">
+            </div>
+        <% } %>
+        </div>
+    <% } %>
+</div>
+</body>
+</html>

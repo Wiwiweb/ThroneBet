@@ -11,6 +11,7 @@ var config = require('./config');
 var db = require('./db');
 var openid = require('./openid');
 var throneLogic = require('./throneLogic');
+var zonesData = require('./data/zonesData');
 
 winston.remove(winston.transports.Console);
 if (process.argv[2] == 'debug') {
@@ -69,7 +70,9 @@ app.get('/', function(req, res) {
 );
 
 app.get('/channel/[a-z0-9]+', function(req, res) {
-    res.sendFile(__dirname + '/public/channel.html');
+    res.render(__dirname + '/public/channel.ejs', {
+        zones: zonesData
+    });
 });
 
 app.get('/index.js', function(req, res) {
@@ -82,6 +85,10 @@ app.get('/channel/channel.js', function(req, res) {
 
 app.get('/main.css', function(req, res) {
     res.sendFile(__dirname + '/public/main.css');
+});
+
+app.get('/channel.css', function(req, res) {
+    res.sendFile(__dirname + '/public/channel.css');
 });
 
 app.get('/images/:file', function(req, res) {

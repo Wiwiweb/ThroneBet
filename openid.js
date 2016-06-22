@@ -43,7 +43,6 @@ module.exports = function(app, address, port) {
                     name: profile.displayName,
                     points: points
                 };
-                winston.debug("Done!");
                 return done(null, user);
             }, function(err) {
                 winston.error("Error fetching user:", err);

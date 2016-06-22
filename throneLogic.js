@@ -6,7 +6,7 @@ var request = require('request');
 var winston = require('winston');
 
 var config = require('./config');
-var enemy = require('./enemyData');
+var enemy = require('./data/enemyAPIData');
 var server = require('./server');
 var User = require('./user');
 

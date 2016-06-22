@@ -17,6 +17,6 @@ socket.on('dead', function(msg) {
     $('#messages').append($('<li>').html("<strong>Killed by a " + msg + "</strong>"));
 });
 
-socket.on('error', function(msg) {
+socket.on('throneError', function(msg) {
     alert(msg);
 });
