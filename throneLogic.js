@@ -137,7 +137,7 @@ function disconnectUser(userId) {
 }
 
 function getThroneData(channel, key, callback) {
-    winston.debug("Checking data for channel " + channel);
+    winston.silly("Checking data for channel " + channel);
     var url = 'https://tb-api.xyz/stream/get?s=' + channel + '&key=' + key;
     request.get(url, function(err, response, body) {
         if (!err && response.statusCode == 200) {
@@ -181,7 +181,7 @@ function awardPoints(channel, deathCause) {
             if (user.currentBets[deathCause]) {
                 user.points++; // Can I use the passport.socketio user to save it to database directly on deserialization?
                 winston.info(user.name + " got a point");
-                io.to(user.socketId).emit('gainPoints', 1)
+                io.to(user.socketId).emit('gain points', 1)
             }
         }
     });

@@ -21,7 +21,7 @@
             var death = zone[j];
             var deathShort = death.toLowerCase().replace(' ', '-');
         %>
-            <div class="death" id="<%=deathShort%>-death">
+            <div class="death" id="<%=deathShort%>-death" data-name="<%=death%>">
                 <img src="../images/placeholder-death.jpg" title="<%=death%>">
             </div>
         <% } %>
