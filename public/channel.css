@@ -10,9 +10,6 @@ body {
 
 body {
     font: 13px Helvetica, Arial;
-}
-
-#container {
     display: flex;
     flex-flow: column;
     height: 100%;
