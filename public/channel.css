@@ -1,16 +1,35 @@
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
 }
 
 body {
     font: 13px Helvetica, Arial;
 }
 
+#container {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+}
+
+#messageContainer {
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+#betChoices {
+    flex: 0 1 auto;
+}
+
 .zone {
     float: left;
-    overflow:auto;
+    overflow: auto;
 }
 
 .death {

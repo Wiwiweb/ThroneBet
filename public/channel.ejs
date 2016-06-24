@@ -8,25 +8,27 @@
     <script src="channel.js"></script>
 </head>
 <body>
-<div>
-    <ul id="messages"></ul>
-</div>
-<div id="betChoices">
-    <% for (var i = 0; i < Object.keys(zones).length; i++) {
-        var zoneName = Object.keys(zones)[i];
-        var zone = zones[zoneName];
-    %>
-        <div class="zone" id="<%=zoneName.toLowerCase().replace(' ', '-')%>-zone">
-        <% for (var j = 0; j < zone.length; j++) {
-            var death = zone[j];
-            var deathShort = death.toLowerCase().replace(' ', '-');
+<div id="container">
+    <div id="messageContainer">
+        <ul id="messages"></ul>
+    </div>
+    <div id="betChoices">
+        <% for (var i = 0; i < Object.keys(zones).length; i++) {
+            var zoneName = Object.keys(zones)[i];
+            var zone = zones[zoneName];
         %>
-            <div class="death" id="<%=deathShort%>-death" data-name="<%=death%>">
-                <img src="../images/placeholder-death.jpg" title="<%=death%>">
+            <div class="zone" id="<%=zoneName.toLowerCase().replace(' ', '-')%>-zone">
+            <% for (var j = 0; j < zone.length; j++) {
+                var death = zone[j];
+                var deathShort = death.toLowerCase().replace(' ', '-');
+            %>
+                <div class="death" id="<%=deathShort%>-death" data-name="<%=death%>">
+                    <img src="../images/placeholder-death.jpg" title="<%=death%>">
+                </div>
+            <% } %>
             </div>
         <% } %>
-        </div>
-    <% } %>
+    </div>
 </div>
 </body>
 </html>
