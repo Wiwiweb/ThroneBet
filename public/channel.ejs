@@ -16,13 +16,14 @@
         var zoneName = Object.keys(zones)[i];
         var zone = zones[zoneName];
     %>
-    <div class="zone" id="<%= zoneName.toLowerCase().replace(' ', '-') %>-zone">
+    <div class="zone" id="<%= zoneName.toLowerCase().replace(/ /g, '-') %>-zone">
         <% for (var j = 0; j < zone.length; j++) {
             var death = zone[j];
-            var deathShort = death.toLowerCase().replace(' ', '-');
+            var deathShort = death.toLowerCase().replace(/ /g, '-');
         %>
         <div class="death" id="<%= deathShort %>-death" data-name="<%= death %>">
-            <img src="../images/placeholder-death.jpg" title="<%= death %>">
+            <img class="deathImage" src="../images/sprites/<%= deathShort %>.png" title="<%= death %>"
+                 onError="this.src='../images/placeholder-death.jpg'">
         </div>
         <% } %>
     </div>

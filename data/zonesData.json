@@ -10,6 +10,7 @@
     "Big Bandit"
   ],
   "Sewers": [
+    "Any Sewers",
     "Rat",
     "Rat King",
     "Green Rat",
@@ -20,6 +21,7 @@
     "Mom"
   ],
   "Wasteland": [
+    "Any Wasteland",
     "Raven",
     "Assassin",
     "Salamander",
@@ -27,6 +29,7 @@
     "Big Dog"
   ],
   "Crystal Caves": [
+    "Any Crystal Caves",
     "Spider",
     "Laser Crystal",
     "Cursed Spider",
@@ -35,6 +38,7 @@
     "Hyper Crystal"
   ],
   "Snow City": [
+    "Any Snow City",
     "Snow Bandit",
     "Snowbot",
     "Wolf",
@@ -43,12 +47,14 @@
     "Lil Hunter"
   ],
   "Labs": [
+    "Any Labs",
     "Freak",
     "Explo Freak",
     "Rhino Freak",
     "Turret"
   ],
   "Palace": [
+    "Any Palace",
     "Guardian",
     "Explo Guardian",
     "Dog Guardian",
@@ -56,6 +62,7 @@
     "Throne II"
   ],
   "Cops": [
+    "Any Cops",
     "Grunt",
     "Inspector",
     "Shielder",
@@ -67,6 +74,7 @@
     "Captain"
   ],
   "Secret": [
+    "Any Secret",
     "Bone Fish",
     "Crab",
     "Turtle",

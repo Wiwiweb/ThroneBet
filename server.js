@@ -91,10 +91,13 @@ app.get('/channel.css', function(req, res) {
     res.sendFile(__dirname + '/public/channel.css');
 });
 
-app.get('/images/:file', function(req, res) {
-    res.sendFile(__dirname + '/public/images/' + req.params.file);
+app.get('/images/:folder?/:file', function(req, res) {
+    if (req.params.folder) {
+        res.sendFile(__dirname + '/public/images/' + req.params.folder + '/' + req.params.file);
+    } else {
+        res.sendFile(__dirname + '/public/images/' + req.params.file);
+    }
 });
-
 
 http.listen(serverPort, serverIpAddress, function() {
     winston.info("Listening on http://" + serverIpAddress + ":" + serverPort);

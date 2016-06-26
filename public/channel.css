@@ -31,6 +31,16 @@ body {
 
 .death {
     float: left;
+    border: solid 1px;
+    margin: 1px;
+    width: 64px;
+    height: 64px;
+    overflow: hidden;
+    display: flex;
+}
+
+.deathImage {
+    margin: auto;
 }
 
 #messages {
