@@ -21,8 +21,8 @@
             var death = zone[j];
             var deathShort = death.toLowerCase().replace(/ /g, '-');
         %>
-        <div class="death" id="<%= deathShort %>-death" data-name="<%= death %>">
-            <img class="deathImage" src="../images/sprites/<%= deathShort %>.png" title="<%= death %>"
+        <div class="death" id="<%= deathShort %>-death" data-name="<%= death %>" title="<%= death %>">
+            <img class="deathImage" src="../images/sprites/<%= deathShort %>.png"
                  onError="this.src='../images/placeholder-death.jpg'">
         </div>
         <% } %>
