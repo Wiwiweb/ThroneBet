@@ -6,11 +6,13 @@ var request = require('request');
 var winston = require('winston');
 
 var config = require('./config');
-var enemy = require('./data/enemyAPIData');
 var server = require('./server');
 var User = require('./user');
+var deaths = require('./data/deathsAPIData');
+var bets = require('./data/betsData');
 
 var io;
+var deathToBets;
 
 var previousHealth = 0;
 
@@ -19,6 +21,8 @@ var channelList = {}; // Dictionary of channel name -> channel object (contains 
 var channelDeletionTimeouts = {}; // Dictionary of channel name -> timeout reference (to make sure there's only one)
 
 module.exports = function(http) {
+
+    deathToBets = buildInvertedBetsMap();
     io = socketio(http);
     io.use(passportSocketIo.authorize({
         store: server.sessionStore,
@@ -53,6 +57,26 @@ module.exports = function(http) {
 
     setInterval(mainLoop, 1000);
 };
+
+// betsData.json is a Bet -> Deaths map, which is human-readable
+// But it's more efficient to have a Death -> Bets map to lookup which bets won
+// Creating this map is costly but is a one-time operation
+function buildInvertedBetsMap() {
+    // In this case, an array is an acceptable substitute for an int -> string map
+    deathToBets = [];
+    for (var bet in bets){
+        if (bets.hasOwnProperty(bet)) {
+            bets[bet].forEach(function(death) {
+                if (deathToBets[death]) { // If it already exists, push extra bet value
+                    deathToBets[death].push(bet);
+                } else { // Otherwise create the array of bets
+                    deathToBets[death] = [bet];
+                }
+            });
+        }
+    }
+    winston.debug("Inverted bet map: \n", deathToBets);
+}
 
 
 function mainLoop() {
@@ -159,8 +183,8 @@ function sendEventNotifications(channel, data) {
         var currentLastHit = data['current']['lasthit'];
         winston.info("currentLastHit: " + currentLastHit);
         if (data['current']['health'] < previousHealth) {
-            winston.info("hurt: " + enemy[currentLastHit]);
-            io.to(channel).emit('hurt', enemy[currentLastHit])
+            winston.info("hurt: " + deaths[currentLastHit]);
+            io.to(channel).emit('hurt', deaths[currentLastHit])
         }
         previousHealth = data['current']['health']
     } else if (data['previous'] != null
@@ -168,9 +192,9 @@ function sendEventNotifications(channel, data) {
         && data['previous']['health'] < previousHealth) {
         previousHealth = 0;
         var previousLastHit = data['previous']['lasthit'];
-        winston.info("Channel " + channel + " died from:", enemy[previousLastHit]);
-        awardPoints(channel, enemy[previousLastHit]);
-        io.to(channel).emit('dead', enemy[previousLastHit])
+        winston.info("Channel " + channel + " died from:", deaths[previousLastHit]);
+        awardPoints(channel, deaths[previousLastHit]);
+        io.to(channel).emit('dead', deaths[previousLastHit])
     }
 }
 
