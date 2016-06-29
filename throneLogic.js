@@ -17,7 +17,7 @@ var deathToBets;
 
 var previousHealth = 0;
 
-// Dictionary of user socketId -> user object
+// Dictionary of user identifier -> user object
 var userList = {};
 
 // Dictionary of channel name -> channel object (contains key, list of users)
@@ -57,7 +57,7 @@ module.exports = function(http) {
         });
         socket.on('place bet', function(betTarget) {
             winston.debug(socket.request.user.name + " placed a bet:", betTarget);
-            placeBet(socket, betTarget);
+            placeBet(socket.request.user.identifier, betTarget);
         });
     });
 
@@ -142,14 +142,14 @@ function addUserToChannel(socket, channel) {
     var user = socket.request.user;
     winston.verbose("User " + user.name + " joined channel " + channel);
     var userObject = new User(user.name, user.steamId, user.identifier, user.points, channel, socket.id);
-    userList[socket.id] = userObject;
+    userList[user.identifier] = userObject;
     if (!channelList[channel]) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
     socket.join(channel);
     channelList[channel]['users'].push(userObject);
     socket.on('disconnect', function() {
-        disconnectUser(socket.id);
+        disconnectUser(user.identifier);
     });
     io.to(socket.id).emit('connected');
 }
@@ -178,8 +178,8 @@ function getThroneData(channel, key, callback) {
     });
 }
 
-function placeBet(socket, betTarget) {
-    var user = userList[socket.id];
+function placeBet(userId, betTarget) {
+    var user = userList[userId];
     user.currentBets[betTarget] = 1;
 }
 
@@ -213,10 +213,10 @@ function calculatePoints(channel, winningBets) {
                 if (user.currentBets[winningBet]) {
                     var earned = user.currentBets[winningBet];
                     // This is where more complicated calculations involving odds and time will happen in the future
-                    if (winners[user.socketId]) { // If the user is already a winner, just add more points
-                        winners[user.socketId] += earned;
+                    if (winners[user.identifier]) { // If the user is already a winner, just add more points
+                        winners[user.identifier] += earned;
                     } else {
-                        winners[user.socketId] = earned;
+                        winners[user.identifier] = earned;
                     }
                     winston.info(user.name + " earned " + earned + " points");
                 }
