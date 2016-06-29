@@ -1,6 +1,7 @@
 var dateFormat = require('dateformat');
 var ejs = require('ejs');
 var express = require('express');
+var favicon = require('serve-favicon');
 var app = express();
 var session = require('express-session');
 var pgSession = require('connect-pg-simple')(session);
@@ -50,6 +51,7 @@ module.exports.sessionStore = sessionStore;
 
 app.use(configuredSession);
 
+app.use(favicon(__dirname + '/public/static/images/favicon.png'));
 app.use(express.static(__dirname + '/public/static'));
 
 // Set up openID routes and callbacks
