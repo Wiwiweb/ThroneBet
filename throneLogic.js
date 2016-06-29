@@ -6,6 +6,7 @@ var request = require('request');
 var winston = require('winston');
 
 var config = require('./config');
+var db = require('./db');
 var server = require('./server');
 var User = require('./user');
 var deaths = require('./data/deathsAPIData');
@@ -16,9 +17,14 @@ var deathToBets;
 
 var previousHealth = 0;
 
-var userList = {}; // Dictionary of user socketId -> user object
-var channelList = {}; // Dictionary of channel name -> channel object (contains key, list of users)
-var channelDeletionTimeouts = {}; // Dictionary of channel name -> timeout reference (to make sure there's only one)
+// Dictionary of user socketId -> user object
+var userList = {};
+
+// Dictionary of channel name -> channel object (contains key, list of users)
+var channelList = {};
+
+// Dictionary of channel name -> timeout reference (to make sure there's only one)
+var channelDeletionTimeouts = {};
 
 module.exports = function(http) {
 
@@ -134,10 +140,9 @@ function deleteChannel(channel) {
 
 function addUserToChannel(socket, channel) {
     var user = socket.request.user;
-    var id = socket.id;
     winston.verbose("User " + user.name + " joined channel " + channel);
     var userObject = new User(user.name, user.steamId, user.identifier, user.points, channel, socket.id);
-    userList[id] = userObject;
+    userList[socket.id] = userObject;
     if (!channelList[channel]) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
@@ -193,22 +198,43 @@ function sendEventNotifications(channel, data) {
         previousHealth = 0;
         var previousLastHit = data['previous']['lasthit'];
         winston.info("Channel " + channel + " died from:", deaths[previousLastHit]);
-        awardPoints(channel, deathToBets[previousLastHit]);
+        var winners = calculatePoints(channel, deathToBets[previousLastHit]);
+        awardPoints(channel, winners);
         io.to(channel).emit('dead', deaths[previousLastHit])
     }
 }
 
-function awardPoints(channel, winningBets) {
+function calculatePoints(channel, winningBets) {
+    var winners = {};
     var users = channelList[channel]['users'];
     users.forEach(function(user) {
         if (user.currentBets) {
             winningBets.forEach(function(winningBet) {
                 if (user.currentBets[winningBet]) {
-                    user.points++;
-                    winston.info(user.name + " got a point");
-                    io.to(user.socketId).emit('gain points', 1)
+                    var earned = user.currentBets[winningBet];
+                    // This is where more complicated calculations involving odds and time will happen in the future
+                    if (winners[user.socketId]) { // If the user is already a winner, just add more points
+                        winners[user.socketId] += earned;
+                    } else {
+                        winners[user.socketId] = earned;
+                    }
+                    winston.info(user.name + " earned " + earned + " points");
                 }
             });
         }
     });
+    return winners;
+}
+
+function awardPoints(channel, winners) {
+    for (var winner in winners) {
+        if (winners.hasOwnProperty(winner)) {
+            var user = userList[winner];
+            var points = winners[winner];
+            io.to(channel).emit('points awarded', user.name, points);
+            user.points += points; // Copy or reference? Double check if this actually works later
+            db("UPDATE users SET points=$1 WHERE openid_identifier=$2", [user.points, user.identifier]);
+            winston.info(user.name + " earned a total of " + points + " points and now has " + user.points);
+        }
+    }
 }
