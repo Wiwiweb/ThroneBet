@@ -81,7 +81,6 @@ function buildInvertedBetsMap() {
             });
         }
     }
-    winston.debug("Inverted bet map: \n", deathToBets);
 }
 
 

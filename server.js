@@ -1,6 +1,7 @@
 var dateFormat = require('dateformat');
 var ejs = require('ejs');
-var app = require('express')();
+var express = require('express');
+var app = express();
 var session = require('express-session');
 var pgSession = require('connect-pg-simple')(session);
 var pg = require('pg');
@@ -49,6 +50,8 @@ module.exports.sessionStore = sessionStore;
 
 app.use(configuredSession);
 
+app.use(express.static(__dirname + '/public/static'));
+
 // Set up openID routes and callbacks
 openid(app, serverIpAddress, serverPort);
 
@@ -73,30 +76,6 @@ app.get('/channel/[a-z0-9]+', function(req, res) {
     res.render(__dirname + '/public/channel.ejs', {
         zones: zonesData
     });
-});
-
-app.get('/index.js', function(req, res) {
-    res.sendFile(__dirname + '/public/index.js');
-});
-
-app.get('/channel/channel.js', function(req, res) {
-    res.sendFile(__dirname + '/public/channel.js');
-});
-
-app.get('/main.css', function(req, res) {
-    res.sendFile(__dirname + '/public/main.css');
-});
-
-app.get('/channel.css', function(req, res) {
-    res.sendFile(__dirname + '/public/channel.css');
-});
-
-app.get('/images/:folder?/:file', function(req, res) {
-    if (req.params.folder) {
-        res.sendFile(__dirname + '/public/images/' + req.params.folder + '/' + req.params.file);
-    } else {
-        res.sendFile(__dirname + '/public/images/' + req.params.file);
-    }
 });
 
 http.listen(serverPort, serverIpAddress, function() {
