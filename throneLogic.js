@@ -64,7 +64,7 @@ module.exports = function(http) {
 function buildInvertedBetsMap() {
     // In this case, an array is an acceptable substitute for an int -> string map
     deathToBets = [];
-    for (var bet in bets){
+    for (var bet in bets) {
         if (bets.hasOwnProperty(bet)) {
             bets[bet].forEach(function(death) {
                 if (deathToBets[death]) { // If it already exists, push extra bet value
@@ -193,20 +193,22 @@ function sendEventNotifications(channel, data) {
         previousHealth = 0;
         var previousLastHit = data['previous']['lasthit'];
         winston.info("Channel " + channel + " died from:", deaths[previousLastHit]);
-        awardPoints(channel, deaths[previousLastHit]);
+        awardPoints(channel, deathToBets[previousLastHit]);
         io.to(channel).emit('dead', deaths[previousLastHit])
     }
 }
 
-function awardPoints(channel, deathCause) {
+function awardPoints(channel, winningBets) {
     var users = channelList[channel]['users'];
     users.forEach(function(user) {
         if (user.currentBets) {
-            if (user.currentBets[deathCause]) {
-                user.points++; // Can I use the passport.socketio user to save it to database directly on deserialization?
-                winston.info(user.name + " got a point");
-                io.to(user.socketId).emit('gain points', 1)
-            }
+            winningBets.forEach(function(winningBet) {
+                if (user.currentBets[winningBet]) {
+                    user.points++;
+                    winston.info(user.name + " got a point");
+                    io.to(user.socketId).emit('gain points', 1)
+                }
+            });
         }
     });
 }
