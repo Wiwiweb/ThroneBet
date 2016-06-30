@@ -8,7 +8,8 @@ var winston = require('winston');
 var config = require('./config');
 var db = require('./db');
 var server = require('./server');
-var User = require('./user');
+var User = require('./classes/userClass');
+var Channel = require('./classes/channelClass');
 var deaths = require('./data/deathsAPIData');
 var bets = require('./data/betsData');
 
@@ -21,7 +22,7 @@ var previousHealth = 0;
 var userList = {};
 
 // Dictionary of channel name -> channel object (contains key, list of users)
-var channelList = {};
+var channelList = new Map();
 
 // Dictionary of channel name -> timeout reference (to make sure there's only one)
 var channelDeletionTimeouts = {};
@@ -42,14 +43,14 @@ module.exports = function(http) {
             createChannel(socket, channel, key);
         });
         socket.on('check channel valid', function(channel) {
-            if (channelList[channel]) {
+            if (channelList.get(channel)) {
                 io.to(socket.id).emit('channel valid', channel);
             } else {
                 io.to(socket.id).emit('throneError', "Channel does not exist!");
             }
         });
         socket.on('join channel', function(channel) {
-            if (channelList[channel]) {
+            if (channelList.get(channel)) {
                 addUserToChannel(socket, channel);
             } else {
                 io.to(socket.id).emit('throneError', "Channel does not exist!");
@@ -85,39 +86,37 @@ function buildInvertedBetsMap() {
 
 
 function mainLoop() {
-    for (var channel in channelList) {
-        if (channelList.hasOwnProperty(channel)) { // Necessary to avoid looping over prototype properties
-
-            if (channelList[channel]['users'].length > 0) {
-                if (channelDeletionTimeouts[channel]) {
-                    winston.info("Channel " + channel + " no longer empty, cancelling timeout");
-                    clearTimeout(channelDeletionTimeouts[channel]);
-                    delete channelDeletionTimeouts[channel];
-                }
-                var data = getThroneData(channel, channelList[channel]['key'], function(err, channel, data) {
-                    if (err) {
-                        winston.error("Error fetching Throne data! code: " + err);
-                        return;
-                    }
-                    sendEventNotifications(channel, data);
-                });
+    for (var channel in channelList.values()) {
+        var channelId = channel.steamId;
+        if (channel['users'].length > 0) {
+            if (channelDeletionTimeouts[channelId]) {
+                winston.info("Channel " + channel.creator + " no longer empty, cancelling timeout");
+                clearTimeout(channelDeletionTimeouts[channelId]);
+                delete channelDeletionTimeouts[channelId];
             }
-            else {
-                if (!channelDeletionTimeouts[channel]) {
-                    winston.info("Channel " + channel + " is now empty, removing in a minute");
-                    channelDeletionTimeouts[channel] = setTimeout(deleteChannel.bind(this, channel), 60000);
+            var data = getThroneData(channelId, channel['key'], function(err, channel, data) {
+                if (err) {
+                    winston.error("Error fetching Throne data! code: " + err);
+                    return;
                 }
+                sendEventNotifications(channelId, data);
+            });
+        }
+        else {
+            if (!channelDeletionTimeouts[channelId]) {
+                winston.info("Channel " + channel.creator + " is now empty, removing in a minute");
+                channelDeletionTimeouts[channelId] = setTimeout(deleteChannel.bind(this, channelId), 60000);
             }
         }
     }
 }
 
-function createChannel(socket, channel, key) {
+function createChannel(socket, channelId, key) {
     // Check if channel is correct
     // We don't actually care about the data, just that it returns OK
-    getThroneData(channel, key, function(err) {
+    getThroneData(channelId, key, function(err) {
         if (err) {
-            winston.warn("Channel " + channel + " could not be created:", err);
+            winston.warn("Channel " + channelId + " could not be created:", err);
             if (err.message == 403) {
                 io.to(socket.id).emit('throneError', "Wrong key!");
             } else {
@@ -125,15 +124,15 @@ function createChannel(socket, channel, key) {
             }
             return;
         }
-        winston.info("Creating channel:", channel);
-        channelList[channel] = {'key': key, 'users': []};
-        io.to(socket.id).emit('channel valid', channel);
+        winston.info("Creating channel:", socket.request.user.name);
+        channelList.set(channelId, new Channel(channelId, key, socket.request.user.name));
+        io.to(socket.id).emit('channel valid', channelId);
     });
 }
 
 function deleteChannel(channel) {
     winston.info("Deleting channel " + channel);
-    delete channelList[channel];
+    delete channelList.get(channel);
     delete channelDeletionTimeouts[channel];
 }
 
@@ -142,11 +141,11 @@ function addUserToChannel(socket, channel) {
     winston.verbose("User " + user.name + " joined channel " + channel);
     var userObject = new User(user.name, user.steamId, user.identifier, user.points, channel, socket.id);
     userList[user.identifier] = userObject;
-    if (!channelList[channel]) {
+    if (!channelList.get(channel)) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
     socket.join(channel);
-    channelList[channel]['users'].push(userObject);
+    channelList.get(channel)['users'].push(userObject);
     socket.on('disconnect', function() {
         disconnectUser(user.identifier);
     });
@@ -157,11 +156,11 @@ function disconnectUser(userId) {
     winston.verbose("User " + userList[userId].name + " disconnected");
     var channel = userList[userId].channel;
     delete userList[userId];
-    if (!channelList[channel]) {
+    if (!channelList.get(channel)) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
     // Remove user from list
-    channelList[channel]['users'].splice(channelList[channel]['users'].indexOf(userList[userId]), 1);
+    channelList.get(channel)['users'].splice(channelList.get(channel)['users'].indexOf(userList[userId]), 1);
 }
 
 function getThroneData(channel, key, callback) {
@@ -205,7 +204,7 @@ function sendEventNotifications(channel, data) {
 
 function calculatePoints(channel, winningBets) {
     var winners = {};
-    var users = channelList[channel]['users'];
+    var users = channelList.get(channel)['users'];
     users.forEach(function(user) {
         if (user.currentBets) {
             winningBets.forEach(function(winningBet) {
