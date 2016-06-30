@@ -231,7 +231,7 @@ function awardPoints(channel, winners) {
             var user = userList[winner];
             var points = winners[winner];
             io.to(channel).emit('points awarded', user.name, points);
-            user.points += points; // Copy or reference? Double check if this actually works later
+            user.points += points;
             db("UPDATE users SET points=$1 WHERE openid_identifier=$2", [user.points, user.identifier]);
             winston.info(user.name + " earned a total of " + points + " points and now has " + user.points);
         }

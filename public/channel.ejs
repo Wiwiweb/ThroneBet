@@ -18,12 +18,12 @@
     %>
     <div class="zone" id="<%= zoneName.toLowerCase().replace(/ /g, '-') %>-zone">
         <% for (var j = 0; j < zone.length; j++) {
-            var death = zone[j];
-            var deathShort = death.toLowerCase().replace(/ /g, '-');
+            var bet = zone[j];
+            var betShort = bet.toLowerCase().replace(/ /g, '-');
         %>
-        <div class="death" id="<%= deathShort %>-death" data-name="<%= death %>" title="<%= death %>">
-            <img class="deathImage" src="../images/sprites/<%= deathShort %>.png"
-                 onError="this.src='../images/placeholder-death.jpg'">
+        <div class="bet" data-name="<%= bet %>" title="<%= bet %>">
+            <img class="deathImage" src="../images/sprites/<%= betShort %>.png"
+                 onError="this.src='../images/placeholder-bet.jpg'">
         </div>
         <% } %>
     </div>

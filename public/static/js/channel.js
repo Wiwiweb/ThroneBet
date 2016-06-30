@@ -26,7 +26,7 @@ socket.on('throneError', function(msg) {
 });
 
 $(document).ready(function() {
-    $('.death').click(function() {
+    $('.bet').click(function() {
         addMessage("Betting on " + $(this).data('name'));
         socket.emit('place bet', $(this).data('name'));
     });
