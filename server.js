@@ -6,6 +6,7 @@ var app = express();
 var session = require('express-session');
 var pgSession = require('connect-pg-simple')(session);
 var pg = require('pg');
+var passport = require('passport');
 var http = require('http').Server(app);
 var winston = require('winston');
 
@@ -61,7 +62,7 @@ app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {
         winston.debug("User is", req.user);
-        if (req.user) {
+        if (req.user && !req.user.guest) {
             res.render(__dirname + '/public/index.ejs', {
                 user: req.user.name,
                 steamId: req.user.steamId
@@ -74,11 +75,30 @@ app.get('/', function(req, res) {
     }
 );
 
-app.get('/channel/[a-z0-9]+', function(req, res) {
-    res.render(__dirname + '/public/channel.ejs', {
-        zones: zonesData
-    });
-});
+app.get('/channel/[a-z0-9]+',
+    function(req, res, next) {
+        winston.debug("Channel init login:", req.user);
+        if (req.isUnauthenticated()) {
+            passport.authenticate('dummy', function(err, user) {
+                if (err) {
+                    return next(err);
+                }
+                req.logIn(user, function(err) {
+                    if (err) {
+                        return next(err);
+                    }
+                })
+            })(req, res, next);
+        }
+        next();
+    },
+    function(req, res) {
+        winston.debug("Channel login:", req.user);
+        res.render(__dirname + '/public/channel.ejs', {
+            zones: zonesData
+        });
+    }
+);
 
 http.listen(serverPort, serverIpAddress, function() {
     winston.info("Listening on http://" + serverIpAddress + ":" + serverPort);

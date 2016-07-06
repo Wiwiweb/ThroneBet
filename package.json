@@ -10,6 +10,7 @@
     "express-session": "latest",
     "openid": "latest",
     "passport": "latest",
+    "passport-dummy": "0.0.1",
     "passport-steam": "1.0.1",
     "passport.socketio": "^3.6.1",
     "pg": "~5.0.0",

@@ -1,6 +1,7 @@
 var openid = require('openid');
 var passport = require('passport');
 var SteamStrategy = require('passport-steam').Strategy;
+var DummyStrategy = require('passport-dummy').Strategy;
 var request = require('request');
 var winston = require('winston');
 
@@ -50,7 +51,23 @@ module.exports = function(app, address, port) {
             });
         });
 
+    // Could be replaced with just req.logIn(),
+    // but it makes it nicer to have this here as a strategy
+    var dummyStrategy = new DummyStrategy(function validate(done) {
+            var name = 'Anon_' + Math.random().toString();
+            var user = {
+                identifier: name,
+                steamId: null,
+                name: name,
+                points: 0,
+                guest: true
+            };
+            return done(null, user);
+        }
+    );
+
     passport.use(steamStrategy);
+    passport.use(dummyStrategy);
     passport.serializeUser(passportSerialize);
     passport.deserializeUser(passportDeserialize);
 
@@ -76,24 +93,34 @@ module.exports = function(app, address, port) {
 };
 
 function passportSerialize(user, done) {
-    winston.debug("Serialized user:", user.name);
-    done(null, user.identifier);
+    if (user.guest) {
+        winston.debug("Serialized anon user:", user.name);
+        done(null, user);
+    } else {
+        winston.debug("Serialized user:", user.name);
+        done(null, user.identifier);
+    }
 }
 
 function passportDeserialize(identifier, done) {
-    db("SELECT * FROM users WHERE openid_identifier=$1", [identifier]).then(function(result) {
-        if (result.rows.length == 0) {
-            done(winston.error("Couldn't find user", identifier));
-            return;
-        }
-        winston.debug("Deserialized user:", result.rows[0].name);
-        done(null, {
-            identifier: identifier,
-            steamId: result.rows[0].steamid,
-            name: result.rows[0].name,
-            points: result.rows[0].points
+    if (identifier.guest) {
+        winston.debug("Deserialized anon user:", identifier.name);
+        done(null, identifier)
+    } else {
+        db("SELECT * FROM users WHERE openid_identifier=$1", [identifier]).then(function(result) {
+            if (result.rows.length == 0) {
+                done(winston.error("Couldn't find user", identifier));
+                return;
+            }
+            winston.debug("Deserialized user:", result.rows[0].name);
+            done(null, {
+                identifier: identifier,
+                steamId: result.rows[0].steamid,
+                name: result.rows[0].name,
+                points: result.rows[0].points
+            });
+        }, function(err) {
+            done(winston.error("Error fetching user:", err));
         });
-    }, function(err) {
-        done(winston.error("Error fetching user:", err));
-    });
+    }
 }
