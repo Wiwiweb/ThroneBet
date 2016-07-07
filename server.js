@@ -62,16 +62,13 @@ app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {
         winston.debug("User is", req.user);
+        var user = null;
         if (req.user && !req.user.anonymous) {
-            res.render(__dirname + '/public/index.ejs', {
-                user: req.user.name,
-                steamId: req.user.steamId
-            });
-        } else {
-            res.render(__dirname + '/public/index.ejs', {
-                user: null
-            });
+            user = req.user;
         }
+        res.render(__dirname + '/public/index.ejs', {
+            user: user
+        });
     }
 );
 

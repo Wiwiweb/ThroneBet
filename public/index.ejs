@@ -9,9 +9,9 @@
 <body>
 <h1>Create channel:</h1>
     <% if(user) { %>
-        Logged in as <%= JSON.stringify(user) %><br/>
+        Logged in as <%= JSON.stringify(user.name) %><br/>
         <form id="createChannelForm">
-        <input type="hidden" id="createChannelInput" value="<%= steamId %>">
+        <input type="hidden" id="createChannelInput" value="<%= user.steamId %>">
         Key: <input type="text" id="createKeyInput"><br/>
         <input type="submit" value="Go">
         </form>
