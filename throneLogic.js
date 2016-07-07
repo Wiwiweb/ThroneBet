@@ -65,6 +65,9 @@ module.exports = function(http) {
     setInterval(mainLoop, 1000);
 };
 
+module.exports.channelList = channelList;
+
+
 // betsData.json is a Bet -> Deaths map, which is human-readable
 // But it's more efficient to have a Death -> Bets map to lookup which bets won
 // Creating this map is costly but is a one-time operation

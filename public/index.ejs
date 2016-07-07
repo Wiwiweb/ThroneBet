@@ -20,8 +20,19 @@
     <% } %>
 <h1>Join channel:</h1>
 <form id="joinChannelForm">
-    Channel: <input type="text" id="joinChannelInput"><br/>
-    <input type="submit" value="Go">
+    <% if (channelList.size == 0) { %>
+        <p>No channels currently</p>
+    <%  } else {
+        for (var channel of channelList.values()) {
+            var channelId = channel.steamId;
+            var channelName = channel.creator;
+            var channelViewers = channel.users.length;
+        %>
+            <a href="channel/<%= channelId %>"><%= channelName %> (<%= channelViewers %>)</a>
+        <%
+        }
+    }
+    %>
 </form>
 </body>
 </html>

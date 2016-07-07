@@ -7,12 +7,6 @@ $(document).ready(function() {
         socket.emit('create channel', $('#createChannelInput').val(), $('#createKeyInput').val());
         return false;
     });
-
-    $('#joinChannelForm').submit(function() {
-        console.debug('Join channel');
-        socket.emit('check channel valid', $('#joinChannelInput').val());
-        return false;
-    });
 });
 
 

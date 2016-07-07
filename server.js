@@ -61,16 +61,16 @@ openid(app, serverIpAddress, serverPort);
 app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {
-        winston.debug("User is", req.user);
-        var user = null;
-        if (req.user && !req.user.anonymous) {
-            user = req.user;
-        }
-        res.render(__dirname + '/public/index.ejs', {
-            user: user
-        });
+    winston.debug("User is", req.user);
+    var user = null;
+    if (req.user && !req.user.anonymous) {
+        user = req.user;
     }
-);
+    res.render(__dirname + '/public/index.ejs', {
+        user: user,
+        channelList: throneLogic.channelList
+    });
+});
 
 app.get('/channel/[a-z0-9]+',
     function(req, res, next) {
