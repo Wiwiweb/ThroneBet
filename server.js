@@ -62,7 +62,7 @@ app.set('view engine', 'ejs');
 
 app.get('/', function(req, res) {
         winston.debug("User is", req.user);
-        if (req.user && !req.user.guest) {
+        if (req.user && !req.user.anonymous) {
             res.render(__dirname + '/public/index.ejs', {
                 user: req.user.name,
                 steamId: req.user.steamId

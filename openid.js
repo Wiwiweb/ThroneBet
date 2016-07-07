@@ -7,6 +7,7 @@ var winston = require('winston');
 
 var config = require('./config');
 var db = require('./db');
+var anonNames = require('./data/anonNames');
 
 module.exports = function(app, address, port) {
     var steamStrategy = new SteamStrategy({
@@ -54,13 +55,13 @@ module.exports = function(app, address, port) {
     // Could be replaced with just req.logIn(),
     // but it makes it nicer to have this here as a strategy
     var dummyStrategy = new DummyStrategy(function validate(done) {
-            var name = 'Anon_' + Math.random().toString();
+            var name = getAnonName();
             var user = {
                 identifier: name,
                 steamId: null,
                 name: name,
                 points: 0,
-                guest: true
+                anonymous: true
             };
             return done(null, user);
         }
@@ -93,7 +94,7 @@ module.exports = function(app, address, port) {
 };
 
 function passportSerialize(user, done) {
-    if (user.guest) {
+    if (user.anonymous) {
         winston.debug("Serialized anon user:", user.name);
         done(null, user);
     } else {
@@ -103,7 +104,7 @@ function passportSerialize(user, done) {
 }
 
 function passportDeserialize(identifier, done) {
-    if (identifier.guest) {
+    if (identifier.anonymous) {
         winston.debug("Deserialized anon user:", identifier.name);
         done(null, identifier)
     } else {
@@ -123,4 +124,12 @@ function passportDeserialize(identifier, done) {
             done(winston.error("Error fetching user:", err));
         });
     }
+}
+
+function getAnonName() {
+    var randomPart = "";
+    for (var i=0; i<3; i++) {
+        randomPart += anonNames[Math.floor(Math.random() * anonNames.length)];
+    }
+    return 'Anon_' + randomPart;
 }
