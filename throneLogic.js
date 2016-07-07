@@ -89,7 +89,7 @@ function buildInvertedBetsMap() {
 
 
 function mainLoop() {
-    for (var channel in channelList.values()) {
+    for (var channel of channelList.values()) {
         var channelId = channel.steamId;
         if (channel['users'].length > 0) {
             if (channelDeletionTimeouts[channelId]) {
@@ -102,7 +102,7 @@ function mainLoop() {
                     winston.error("Error fetching Throne data! code: " + err);
                     return;
                 }
-                sendEventNotifications(channelId, data);
+                sendEventNotifications(channel.steamId, data);
             });
         }
         else {
