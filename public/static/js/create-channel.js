@@ -4,7 +4,7 @@ $(document).ready(function() {
 
     $('#createChannelForm').submit(function() {
         console.debug('Create channel');
-        socket.emit('create channel', $('#createChannelInput').val(), $('#createKeyInput').val());
+        socket.emit('create channel', $('#keyInput').val(), $('#twitchInput').val());
         return false;
     });
 });

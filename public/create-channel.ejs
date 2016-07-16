@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ThroneBet</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="js/create-channel.js"></script>
+</head>
+<body>
+<h1>Create channel:</h1>
+    <% if(user) { %>
+        <form id="createChannelForm">
+            Logged in as <%= JSON.stringify(user.name) %><br/>
+            Nuclear Throne Key: <input type="text" id="keyInput"> (Find it in the options menu)<br/>
+            Twitch channel: <input type="text" id="twitchInput"><br/>
+            <input type="submit" value="Go">
+        </form>
+    <% } else { %>
+        <p>You need to be logged in!</p>
+    <% } %>
+</body>
+</html>

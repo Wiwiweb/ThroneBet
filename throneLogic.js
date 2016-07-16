@@ -38,9 +38,9 @@ module.exports = function(http) {
     }));
     io.on('connection', function(socket) {
         winston.info("User socket connected: ", socket.request.user);
-        socket.on('create channel', function(channel, key) {
-            winston.debug("create channel", channel, key);
-            createChannel(socket, channel, key);
+        socket.on('create channel', function(key, twitchChannel) {
+            winston.debug("create channel", socket.request.user.steamId, key, twitchChannel);
+            createChannel(socket, key, twitchChannel);
         });
         socket.on('check channel valid', function(channel) {
             if (channelList.get(channel)) {
@@ -93,7 +93,7 @@ function mainLoop() {
         var channelId = channel.steamId;
         if (channel['users'].length > 0) {
             if (channelDeletionTimeouts[channelId]) {
-                winston.info("Channel " + channel.creator + " no longer empty, cancelling timeout");
+                winston.info("Channel " + channel.creatorName + " no longer empty, cancelling timeout");
                 clearTimeout(channelDeletionTimeouts[channelId]);
                 delete channelDeletionTimeouts[channelId];
             }
@@ -107,17 +107,30 @@ function mainLoop() {
         }
         else {
             if (!channelDeletionTimeouts[channelId]) {
-                winston.info("Channel " + channel.creator + " is now empty, removing in a minute");
+                winston.info("Channel " + channel.creatorName + " is now empty, removing in a minute");
                 channelDeletionTimeouts[channelId] = setTimeout(deleteChannel.bind(this, channelId), 60000);
             }
         }
     }
 }
 
-function createChannel(socket, channelId, key) {
-    // Check if channel is correct
-    // We don't actually care about the data, just that it returns OK
-    getThroneData(channelId, key, function(err) {
+function createChannel(socket, key, twitchChannel) {
+    var channelId = socket.request.user.steamId;
+    // Check if twitch channel exists
+    var url = 'https://api.twitch.tv/kraken/channels/' + twitchChannel;
+    request.get(url, createChannelTwitchResponse);
+
+    function createChannelTwitchResponse(err, response) {
+        if (err || response.statusCode == 404) {
+            io.to(socket.id).emit('throneError', "Invalid Twitch channel!");
+        } else {
+            // Check if channel is correct
+            // We don't actually care about the data, just that it returns OK
+            getThroneData(channelId, key, createChannelThroneResponse);
+        }
+    }
+
+    function createChannelThroneResponse(err) {
         if (err) {
             winston.warn("Channel " + channelId + " could not be created:", err);
             if (err.message == 403) {
@@ -128,9 +141,16 @@ function createChannel(socket, channelId, key) {
             return;
         }
         winston.info("Creating channel:", socket.request.user.name);
-        channelList.set(channelId, new Channel(channelId, key, socket.request.user.name));
+        saveChannelInfo(socket.request.user.id, key, twitchChannel);
+        channelList.set(channelId, new Channel(channelId, key, socket.request.user.name, twitchChannel));
         io.to(socket.id).emit('channel valid', channelId);
-    });
+    }
+}
+
+function saveChannelInfo(creatorId, key, twitchChannel) {
+    var query = "INSERT INTO channels (creatorid, key, twitch_channel) " +
+                "VALUES ($1, $2, $3)";
+    db(query, [creatorId, key, twitchChannel]);
 }
 
 function deleteChannel(channel) {

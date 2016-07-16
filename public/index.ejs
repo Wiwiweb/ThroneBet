@@ -4,20 +4,16 @@
     <title>ThroneBet</title>
     <script src="/socket.io/socket.io.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
-    <script src="js/index.js"></script>
 </head>
 <body>
-<h1>Create channel:</h1>
-    <% if(user) { %>
-        Logged in as <%= JSON.stringify(user.name) %><br/>
-        <form id="createChannelForm">
-        <input type="hidden" id="createChannelInput" value="<%= user.steamId %>">
-        Key: <input type="text" id="createKeyInput"><br/>
-        <input type="submit" value="Go">
-        </form>
-    <% } else { %>
-        <a href="auth"><img src="images/sits_large_border.png"></a>
-    <% } %>
+<% if(user) { %>
+    Logged in as <%= JSON.stringify(user.name) %><br/>
+    <a href="create-channel"><h1>Create channel</h1></a>
+<% } else { %>
+    <h1>Log in:</h1>
+    <a href="auth"><img src="images/sits_large_border.png"></a>
+    <p>You must be logged in to create a channel.</p>
+<% } %>
 <h1>Join channel:</h1>
 <form id="joinChannelForm">
     <% if (channelList.size == 0) { %>
@@ -25,7 +21,7 @@
     <%  } else {
         for (var channel of channelList.values()) {
             var channelId = channel.steamId;
-            var channelName = channel.creator;
+            var channelName = channel.creatorName;
             var channelViewers = channel.users.length;
         %>
             <a href="channel/<%= channelId %>"><%= channelName %> (<%= channelViewers %>)</a>

@@ -72,6 +72,17 @@ app.get('/', function(req, res) {
     });
 });
 
+app.get('/create-channel', function(req, res) {
+    winston.debug("User is", req.user);
+    var user = null;
+    if (req.user && !req.user.anonymous) {
+        user = req.user;
+    }
+    res.render(__dirname + '/public/create-channel.ejs', {
+        user: user
+    });
+});
+
 app.get('/channel/[a-z0-9]+',
     function(req, res, next) {
         winston.debug("Channel init login:", req.user);

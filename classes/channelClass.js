@@ -1,7 +1,8 @@
-function Channel(steamId, key, creator) {
+function Channel(steamId, key, creatorName, twitchChannel) {
     this.steamId = steamId;
     this.key = key;
-    this.creator = creator;
+    this.creatorName = creatorName;
+    this.twitchChannel = twitchChannel;
     this.users = [];
 }
 
