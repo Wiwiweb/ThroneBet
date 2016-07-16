@@ -21,26 +21,31 @@ module.exports = function(app, address, port) {
             db(query, [identifier]).then(function(result) {
                 var steamid = profile.id;
                 var points;
+                var id;
                 if (result.rows.length == 0) {
                     winston.debug("User doesn't exist, creating:", profile.displayName);
                     var query =
                         "INSERT INTO users (openid_identifier, name, steamid, points) " +
-                        "VALUES ($1, $2, $3, $4)";
+                        "VALUES ($1, $2, $3, $4) " +
+                        "RETURNING id";
                     points = 0;
                     var values = [identifier, profile.displayName, steamid, points];
                     // Can't chain promises because this is branching...
-                    db(query, values).then(function() {
-                        winston.info("Created user: ", profile.displayName);
+                    db(query, values).then(function(result) {
+                        id = result.rows[0].id;
+                        winston.info("Created user:", profile.displayName, id);
                     }, function(err) {
                         winston.error("Error creating user:", err);
                         return done(err, null);
                     })
                 } else {
                     winston.debug("Found user:", profile.displayName);
-                    points = result.rows[0].points
+                    points = result.rows[0].points;
+                    id = result.rows[0].id;
                 }
                 var user = {
-                    identifier: identifier,
+                    id: id,
+                    openidIdentifier: identifier,
                     steamId: steamid,
                     name: profile.displayName,
                     points: points
@@ -57,7 +62,8 @@ module.exports = function(app, address, port) {
     var dummyStrategy = new DummyStrategy(function validate(done) {
             var name = getAnonName();
             var user = {
-                identifier: name,
+                id: null,
+                openidIdentifier: name,
                 steamId: null,
                 name: name,
                 points: 0,
@@ -99,7 +105,7 @@ function passportSerialize(user, done) {
         done(null, user);
     } else {
         winston.debug("Serialized user:", user.name);
-        done(null, user.identifier);
+        done(null, user.openidIdentifier);
     }
 }
 

@@ -1,4 +1,5 @@
-function User(name, steamId, identifier, points, channel, socketId) {
+function User(id, name, steamId, identifier, points, channel, socketId) {
+    this.id = id;
     this.name = name;
     this.steamId = steamId;
     this.identifier = identifier;
