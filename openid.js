@@ -121,6 +121,7 @@ function passportDeserialize(identifier, done) {
             }
             winston.debug("Deserialized user:", result.rows[0].name);
             done(null, {
+                id: result.rows[0].id,
                 identifier: identifier,
                 steamId: result.rows[0].steamid,
                 name: result.rows[0].name,
