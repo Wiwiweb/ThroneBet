@@ -177,7 +177,7 @@ function addUserToChannel(socket, channel) {
 
 function disconnectUser(userId) {
     winston.verbose("User " + userList[userId].name + " disconnected");
-    var channel = userList[userId].channel;
+    var channel = userList[userId].channelJoined;
     delete userList[userId];
     if (!channelList.get(channel)) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
