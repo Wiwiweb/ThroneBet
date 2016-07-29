@@ -8,8 +8,6 @@ var winston = require('winston');
 var config = require('./config');
 var db = require('./db');
 var server = require('./server');
-var User = require('./classes/userClass');
-var Channel = require('./classes/channelClass');
 var deaths = require('./data/deathsAPIData');
 var bets = require('./data/betsData');
 
@@ -91,7 +89,7 @@ function buildInvertedBetsMap() {
 function mainLoop() {
     for (var channel of channelList.values()) {
         var channelId = channel.steamId;
-        if (channel['users'].length > 0) {
+        if (channel.users.length > 0) {
             if (channelDeletionTimeouts[channelId]) {
                 winston.info("Channel " + channel.creatorName + " no longer empty, cancelling timeout");
                 clearTimeout(channelDeletionTimeouts[channelId]);
@@ -146,7 +144,8 @@ function createChannel(socket, key, twitchChannel) {
             steamId: channelId,
             key: key,
             creatorName: socket.request.user.name,
-            twitchChannel: twitchChannel
+            twitchChannel: twitchChannel,
+            users: []
         };
         channelList.set(channelId, channel);
         io.to(socket.id).emit('channel valid', channelId);
@@ -154,7 +153,7 @@ function createChannel(socket, key, twitchChannel) {
 }
 
 function saveChannelInfo(creatorId, key, twitchChannel) {
-    var query = "INSERT INTO channels (creatorid, key, twitch_channel) " +
+    var query = "INSERT INTO channels (creator_id, key, twitch_channel) " +
                 "VALUES ($1, $2, $3)";
     db(query, [creatorId, key, twitchChannel]);
 }
@@ -176,7 +175,7 @@ function addUserToChannel(socket, channel) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
     socket.join(channel);
-    channelList.get(channel)['users'].push(userObject);
+    channelList.get(channel).users.push(user);
     socket.on('disconnect', function() {
         disconnectUser(user.openidIdentifier);
     });
@@ -191,7 +190,7 @@ function disconnectUser(userId) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
     // Remove user from list
-    channelList.get(channel)['users'].splice(channelList.get(channel)['users'].indexOf(userList[userId]), 1);
+    channelList.get(channel).users.splice(channelList.get(channel).users.indexOf(userList[userId]), 1);
 }
 
 function getThroneData(channel, key, callback) {
@@ -235,7 +234,7 @@ function sendEventNotifications(channel, data) {
 
 function calculatePoints(channel, winningBets) {
     var winners = {};
-    var users = channelList.get(channel)['users'];
+    var users = channelList.get(channel).users;
     users.forEach(function(user) {
         if (user.currentBets) {
             winningBets.forEach(function(winningBet) {
