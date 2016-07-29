@@ -142,7 +142,13 @@ function createChannel(socket, key, twitchChannel) {
         }
         winston.info("Creating channel:", socket.request.user.name);
         saveChannelInfo(socket.request.user.id, key, twitchChannel);
-        channelList.set(channelId, new Channel(channelId, key, socket.request.user.name, twitchChannel));
+        var channel = {
+            steamId: channelId,
+            key: key,
+            creatorName: socket.request.user.name,
+            twitchChannel: twitchChannel
+        };
+        channelList.set(channelId, channel);
         io.to(socket.id).emit('channel valid', channelId);
     }
 }
@@ -162,8 +168,10 @@ function deleteChannel(channel) {
 function addUserToChannel(socket, channel) {
     var user = socket.request.user;
     winston.verbose("User " + user.name + " joined channel " + channel);
-    var userObject = new User(user.id, user.name, user.steamId, user.openidIdentifier, user.points, channel, socket.id);
-    userList[user.openidIdentifier] = userObject;
+    user.channelJoined = channel;
+    user.socketId = socket.id;
+    user.currentBets = {};
+    userList[user.id] = user;
     if (!channelList.get(channel)) {
         winston.error("Channel doesn't exist! (this shouldn't happen)");
     }
