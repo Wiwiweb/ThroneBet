@@ -21,10 +21,10 @@ var previousHealth = 0;
 // Dictionary of user openidIdentifier -> user object
 var userList = {};
 
-// Dictionary of channel name -> channel object (contains key, list of users)
+// Dictionary of channel id -> channel object (contains key, list of users)
 var channelList = new Map();
 
-// Dictionary of channel name -> timeout reference (to make sure there's only one)
+// Dictionary of channel id -> timeout reference (to make sure there's only one)
 var channelDeletionTimeouts = {};
 
 module.exports = function(http) {
