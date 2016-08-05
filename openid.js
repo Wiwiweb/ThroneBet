@@ -86,11 +86,7 @@ module.exports = function(app, address, port) {
 
     app.get('/auth/return', passport.authenticate('steam'),
         function(req, res) {
-            if (req.user) {
-                res.redirect('/?steamid=' + req.user.steamId);
-            } else {
-                res.redirect('/?failed');
-            }
+            res.redirect('/');
         });
 
     app.get('/auth/logout', function(req, res) {
