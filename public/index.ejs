@@ -4,11 +4,18 @@
     <title>ThroneBet</title>
     <script src="/socket.io/socket.io.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="js/index.js"></script>
 </head>
 <body>
 <% if(user) { %>
     Logged in as <%= JSON.stringify(user.name) %><br/>
-    <a href="create-channel"><h1>Create channel</h1></a>
+    <% if(userChannel && channelList.has(userChannel.steamId) ) { %>
+        <a href="channel/<%= user.steamId %>"><h1>Join channel</h1></a>
+    <% } else if (userChannel) { %>
+        <a id="startChannel" href="#"><h1>Start channel</h1></a>
+    <% } else { %>
+        <a href="create-channel"><h1>Create new channel</h1></a>
+    <% } %>
 <% } else { %>
     <h1>Log in:</h1>
     <a href="auth"><img src="images/sits_large_border.png"></a>

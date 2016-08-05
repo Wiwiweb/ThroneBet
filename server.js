@@ -11,6 +11,7 @@ var http = require('http').Server(app);
 var winston = require('winston');
 
 var config = require('./config');
+var helpers = require('./helpers');
 var db = require('./db');
 var openid = require('./openid');
 var throneLogic = require('./throneLogic');
@@ -65,11 +66,23 @@ app.get('/', function(req, res) {
     var user = null;
     if (req.user && !req.user.anonymous) {
         user = req.user;
+        helpers.getChannel(req.user.steamId).then(function(userChannel) {
+            // Is there a way to avoid duplication?
+            winston.debug("steamid: " + userChannel.steamId);
+            winston.debug("has: " + throneLogic.channelList.has(userChannel.steamId));
+            res.render(__dirname + '/public/index.ejs', {
+                user: user,
+                userChannel: userChannel,
+                channelList: throneLogic.channelList
+            });
+        });
+    } else {
+        res.render(__dirname + '/public/index.ejs', {
+            user: user,
+            userChannel: false,
+            channelList: throneLogic.channelList
+        });
     }
-    res.render(__dirname + '/public/index.ejs', {
-        user: user,
-        channelList: throneLogic.channelList
-    });
 });
 
 app.get('/create-channel', function(req, res) {

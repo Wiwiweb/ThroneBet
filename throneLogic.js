@@ -40,6 +40,10 @@ module.exports = function(http) {
             winston.debug("create channel", socket.request.user.steamId, key, twitchChannel);
             createChannel(socket, key, twitchChannel);
         });
+        socket.on('start channel', function() {
+            winston.debug("start channel", socket.request.user.steamId);
+            startChannel(socket);
+        });
         socket.on('check channel valid', function(channel) {
             if (channelList.get(channel)) {
                 io.to(socket.id).emit('channel valid', channel);
@@ -139,7 +143,7 @@ function createChannel(socket, key, twitchChannel) {
             return;
         }
         winston.info("Creating channel:", socket.request.user.name);
-        saveChannelInfo(socket.request.user.id, key, twitchChannel);
+        saveChannelInfo(socket.request.user.steamId, key, twitchChannel);
         var channel = {
             steamId: channelId,
             key: key,
@@ -152,9 +156,35 @@ function createChannel(socket, key, twitchChannel) {
     }
 }
 
+function startChannel(socket) {
+    winston.info("Starting channel:", socket.request.user.name);
+    var channelId = socket.request.user.steamId;
+    var query = "SELECT * FROM channels WHERE steam_id=$1";
+    db(query, [channelId]).then(function(result) {
+        winston.debug('then');
+        if (result.rows.length == 0) {
+            reject(winston.error("Couldn't find channel", channelId));
+        }
+        var channel = {
+            steamId: channelId,
+            key: result.rows[0].key,
+            creatorName: socket.request.user.name,
+            twitchChannel: result.rows[0].twitchChannel,
+            users: []
+        };
+
+        winston.debug(channel);
+
+        channelList.set(channelId, channel);
+        io.to(socket.id).emit('channel valid', channelId);
+    }).catch(function(err) {
+        winston.error(err);
+    });
+}
+
 function saveChannelInfo(creatorId, key, twitchChannel) {
-    var query = "INSERT INTO channels (creator_id, key, twitch_channel) " +
-                "VALUES ($1, $2, $3)";
+    var query = "INSERT INTO channels (steam_id, key, twitch_channel) " +
+        "VALUES ($1, $2, $3)";
     db(query, [creatorId, key, twitchChannel]);
 }
 
@@ -177,7 +207,7 @@ function addUserToChannel(socket, channel) {
     socket.join(channel);
     channelList.get(channel).users.push(user);
     socket.on('disconnect', function() {
-        disconnectUser(user.openidIdentifier);
+        disconnectUser(user.id);
     });
     io.to(socket.id).emit('connected');
 }
