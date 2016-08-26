@@ -10,11 +10,11 @@ var passport = require('passport');
 var http = require('http').Server(app);
 var winston = require('winston');
 
-var config = require('./config');
-var helpers = require('./helpers');
-var db = require('./db');
-var openid = require('./openid');
-var throneLogic = require('./throneLogic');
+var config = require('./lib/config');
+var helpers = require('./lib/helpers');
+var db = require('./lib/db');
+var openid = require('./lib/openid');
+var throneLogic = require('./lib/throneLogic');
 var zonesData = require('./data/zonesData');
 
 winston.remove(winston.transports.Console);
